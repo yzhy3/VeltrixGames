@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Loading...</title>
+  <script>
+    var path = window.location.pathname;
+    var search = window.location.search;
+    var hash = window.location.hash;
+    
+    // Titipkan URL asli lewat parameter ?redirect=
+    var fullPath = path + search + hash;
+    window.location.replace('/?redirect=' + encodeURIComponent(fullPath));
+  </script>
+</head>
+<body></body>
+</html>
