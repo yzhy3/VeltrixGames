@@ -242,7 +242,7 @@ nav.bnav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:var(--nav-
 <a href="#" onclick="showPage('about');return false" data-nav="about" class="bnav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>About</a>
 </nav>
 <script>
-const SB_URL='https://qlzwqbbvjscfjaicbhks.supabase.co',SB_KEY='sb_publishable_DRIOqI7O90TinECl4K6FJA_l0nIaPCY',HDR={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};let games=[],categories=[],stats=[],history=[],curGame=null,settings={},currentRating=0,favSet=new Set();
+const SB_URL='https://eqgsffrjufrcbczqdawm.supabase.co',SB_KEY='sb_publishable_he18YRBnf4GJWRP_IVUTig_KVf5-nsN',HDR={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};let games=[],categories=[],stats=[],history=[],curGame=null,settings={},currentRating=0,favSet=new Set();
 function gantiURL(path){window.history.pushState({},'',path)}
 window.addEventListener('popstate',function(){const path=window.location.pathname;if(path==='/'||path===''||path==='/index.html'){showPage('home')}else if(path.startsWith('/game/')){const id=path.split('/')[2];openDetail(id)}});
 function showToast(msg,isErr=false){let t=document.getElementById('toast');t.innerText=msg;t.className=isErr?'err show':'show';setTimeout(()=>{t.className=''},3000)}
