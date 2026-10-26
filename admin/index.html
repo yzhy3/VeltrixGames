@@ -34,6 +34,7 @@ code{background:#1C1C24;padding:4px 8px;border-radius:6px;font-size:12px;word-br
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="/firebase-config.js"></script>
+<script src="../firebase-config.js"></script>
 <script>
 var auth, db, editId = null, isCreator = false, isAdmin = false;
 
@@ -41,22 +42,38 @@ function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function toast(msg, err){ var t=$('toast'); t.textContent=msg; t.className=err?'e s':'s'; setTimeout(function(){ t.className=''; }, 2800); }
 
-firebase.initializeApp(firebaseConfig);
-auth = firebase.auth();
-db = firebase.firestore();
+// Compatible con window.FIREBASE_CONFIG (firebase-config.js)
+var cfg = window.FIREBASE_CONFIG || window.firebaseConfig || null;
+if (!cfg || !cfg.apiKey) {
+  document.getElementById('app').innerHTML = '<h1>Error de config</h1><p class="muted">No se encontró firebase-config.js o falta el apiKey. Sube el archivo a la raíz del sitio.</p>';
+} else {
+  try {
+    firebase.initializeApp(cfg);
+    auth = firebase.auth();
+    db = firebase.firestore();
+  } catch (e) {
+    document.getElementById('app').innerHTML = '<h1>Error Firebase</h1><p class="muted">' + (e.message || e) + '</p>';
+  }
+}
 
-auth.onAuthStateChanged(function(u){
-  if(!u){ viewLogin(); return; }
-  Promise.all([
-    db.collection('creators').doc(u.uid).get(),
-    db.collection('admins').doc(u.uid).get()
-  ]).then(function(res){
-    isCreator = res[0].exists;
-    isAdmin = isCreator || res[1].exists;
-    if(isAdmin) viewPanel(u);
-    else viewDenied(u);
-  }).catch(function(){ viewDenied(u); });
-});
+if (auth) {
+  auth.onAuthStateChanged(function(u){
+    if(!u){ viewLogin(); return; }
+    Promise.all([
+      db.collection('creators').doc(u.uid).get(),
+      db.collection('admins').doc(u.uid).get()
+    ]).then(function(res){
+      isCreator = res[0].exists;
+      isAdmin = isCreator || res[1].exists;
+      if(isAdmin) viewPanel(u);
+      else viewDenied(u);
+    }).catch(function(e){
+      console.log(e);
+      // Si falla Firestore (reglas), igual mostramos denied con UID
+      viewDenied(u);
+    });
+  });
+}
 
 function viewLogin(){
   $('app').innerHTML = '<h1>Admin · Veltrix Games</h1><div class="card" style="margin-top:16px"><input id="em" type="email" placeholder="Correo"><input id="pw" type="password" placeholder="Contraseña"><button class="w" onclick="login()">Entrar</button><button class="w sec" style="margin-top:8px" onclick="google()">Continuar con Google</button></div>';
@@ -65,7 +82,19 @@ function login(){ auth.signInWithEmailAndPassword($('em').value.trim(), $('pw').
 function google(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){ toast(e.code||'Error',1); }); }
 
 function viewDenied(u){
-  $('app').innerHTML = '<h1>Sin acceso</h1><p class="muted" style="margin-top:8px">Tu cuenta no es admin ni creador.</p><p class="muted" style="margin-top:8px">Si eres el dueño del sitio, en Firebase Console crea la colección <b>creators</b> con un documento cuyo ID sea este UID:</p><code>'+esc(u.uid)+'</code><p class="muted">Después solo tú (creador) podrás dar admin a otros desde este panel.</p><button class="sec w" onclick="auth.signOut()">Cerrar sesión</button>';
+  $('app').innerHTML = '<h1>Sin acceso aún</h1>'+
+    '<p class="muted" style="margin-top:12px">Para ser <b style="color:#eab308">CREADOR</b> (dueño del sitio):</p>'+
+    '<ol class="muted" style="margin:12px 0 12px 18px;line-height:1.7">'+
+    '<li>Abre <b>Firebase Console</b> → Firestore Database</li>'+
+    '<li>Crea la colección <b>creators</b></li>'+
+    '<li>Añade un documento cuyo <b>ID</b> sea exactamente este UID:</li>'+
+    '</ol>'+
+    '<code id="myUid">'+esc(u.uid)+'</code>'+
+    '<button class="w sec" style="margin:8px 0" onclick="navigator.clipboard.writeText(\''+esc(u.uid)+'\');toast(\''UID copiado\')">Copiar UID</button>'+
+    '<p class="muted" style="margin-top:8px">Campo del documento: pon <code style="display:inline;padding:2px 6px">ok = true</code> (o cualquier campo).</p>'+
+    '<p class="muted" style="margin-top:8px">Luego <b>recarga esta página</b>. Verás el panel completo y podrás dar admin a otros.</p>'+
+    '<p class="muted" style="margin-top:12px">Email: '+esc(u.email||'')+'</p>'+
+    '<button class="sec w" style="margin-top:16px" onclick="auth.signOut()">Cerrar sesión</button>';
 }
 
 function viewPanel(u){
