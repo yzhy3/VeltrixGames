@@ -1,9 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
-    }
+    function signedIn() { return request.auth != null; }
     function isCreator() {
       return signedIn() && exists(/databases/$(database)/documents/creators/$(request.auth.uid));
     }
@@ -11,19 +9,26 @@ service cloud.firestore {
       return isCreator()
         || (signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
     }
-
-    // Solo el CREADOR puede agregar/quitar admins
-    match /admins/{uid} {
-      allow read: if true;
-      allow create, update, delete: if isCreator();
+    function notBanned() {
+      return signedIn() && !exists(/databases/$(database)/documents/bans/$(request.auth.uid));
     }
 
-    // Creador: el primero se crea a mano en Firebase Console (una sola vez)
     match /creators/{uid} {
       allow read: if true;
-      allow create, update, delete: if isCreator();
+      allow write: if isCreator();
     }
-
+    match /admins/{uid} {
+      allow read: if true;
+      allow write: if isCreator();
+    }
+    match /bans/{uid} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /settings/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /users/{uid} {
       allow read: if true;
       allow create, update: if signedIn() && request.auth.uid == uid
@@ -32,15 +37,17 @@ service cloud.firestore {
         && (!('bio' in request.resource.data) || request.resource.data.bio.size() <= 160);
       allow delete: if false;
     }
-
+    match /downloads/{id} {
+      allow read: if true;
+      allow create, update: if true;
+    }
     match /games/{id} {
       allow read: if true;
       allow write: if isAdmin();
     }
-
     match /reviews/{id} {
       allow read: if true;
-      allow create, update: if signedIn()
+      allow create, update: if signedIn() && notBanned()
         && request.resource.data.uid == request.auth.uid
         && id == request.resource.data.game_id + '_' + request.auth.uid
         && request.resource.data.rating is int
@@ -48,14 +55,13 @@ service cloud.firestore {
         && request.resource.data.text is string && request.resource.data.text.size() <= 500;
       allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
     }
-
     match /chat/{id} {
       allow read: if true;
-      allow create: if signedIn()
+      allow create: if signedIn() && notBanned()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.text is string
         && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 500;
-      allow update: if signedIn()
+      allow update: if signedIn() && notBanned()
         && resource.data.uid == request.auth.uid
         && request.resource.data.uid == resource.data.uid
         && request.resource.data.text is string
