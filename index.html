@@ -451,10 +451,14 @@ function updateChatInput(){let i=document.getElementById('chatInput');if(!i)retu
 function setChatBadge(on){let el=document.querySelector('.bnav-item[data-nav="chat"]');if(!el)return;let dot=el.querySelector('.chat-dot');if(on){if(!dot){dot=document.createElement('span');dot.className='chat-dot';el.appendChild(dot)}dot.style.display='block'}else if(dot)dot.style.display='none'}
 function markChatSeen(){lastChatSeen=Date.now();try{localStorage.setItem('chatSeen',String(lastChatSeen))}catch(e){}setChatBadge(false)}
 function initChatNotify(){if(!fbReady||!db||chatNotifyUnsub)return;try{lastChatSeen=parseInt(localStorage.getItem('chatSeen')||'0',10)||0}catch(e){lastChatSeen=0}
-chatNotifyUnsub=db.collection('chat').orderBy('createdAt','desc').limit(1).onSnapshot(function(sn){if(sn.empty)return;let d=sn.docs[0].data();let t=d.createdAt&&d.createdAt.toMillis?d.createdAt.toMillis():Date.now();let onChat=document.getElementById('page-chat')&&document.getElementById('page-chat').classList.contains('active');if(onChat){markChatSeen();return}if(t>lastChatSeen&&(!currentUser||d.uid!==currentUser.uid)){setChatBadge(true);maybeNotify('Nuevo mensaje en Veltrix',(d.name||'Alguien')+': '+(d.text||'').slice(0,80),'chat-global')}},function(e){console.log(e)})}
+chatNotifyUnsub=db.collection('chat').orderBy('createdAt','desc').limit(1).onSnapshot(function(sn){if(sn.empty)return;let d=sn.docs[0].data();let t=d.createdAt&&d.createdAt.toMillis?d.createdAt.toMillis():Date.now();let onChat=document.getElementById('page-chat')&&document.getElementById('page-chat').classList.contains('active');if(onChat){markChatSeen();return}if(t>lastChatSeen&&(!currentUser||d.uid!==currentUser.uid)){setChatBadge(true);playMsgSound();maybeNotify('Nuevo mensaje en Veltrix',(d.name||'Alguien')+': '+(d.text||'').slice(0,80),'chat-global')}},function(e){console.log(e)})}
 async function resolveUsers(uids){if(!db||!uids.length)return;let unique=uids.filter(function(u,i,a){return u&&a.indexOf(u)===i});await Promise.all(unique.map(async function(uid){try{let s=await db.collection('users').doc(uid).get();userCache[uid]=s.exists?s.data():{name:'Usuario',photoURL:''}}catch(e){if(!userCache[uid])userCache[uid]={name:'Usuario',photoURL:''}}}))}
 function startChat(){let box=document.getElementById('chatMsgs');if(!fbReady){box.innerHTML='<div class="empty-state"><p>Falta configurar Firebase.</p></div>';return}updateChatInput();markChatSeen();chatFirst=true;if(chatUnsub){if(_lastChatList.length)renderChat(_lastChatList);return}
-chatUnsub=db.collection('chat').orderBy('createdAt','desc').limit(100).onSnapshot(async function(sn){let list=sn.docs.map(function(d){return Object.assign({id:d.id},d.data({serverTimestamps:'estimate'}))}).reverse();_lastChatList=list;let uids=[];list.forEach(function(m){if(m.uid&&uids.indexOf(m.uid)<0)uids.push(m.uid)});await resolveUsers(uids);renderChat(list);let onChat=document.getElementById('page-chat')&&document.getElementById('page-chat').classList.contains('active');if(onChat)markChatSeen()},function(e){console.log(e);box.innerHTML='<div class="empty-state"><p>No se pudo cargar el chat.</p></div>'})}
+let _chatSnapFirst=true;
+chatUnsub=db.collection('chat').orderBy('createdAt','desc').limit(100).onSnapshot(async function(sn){let list=sn.docs.map(function(d){return Object.assign({id:d.id},d.data({serverTimestamps:'estimate'}))}).reverse();
+if(!_chatSnapFirst&&list.length){let last=list[list.length-1];if(last.uid&&(!currentUser||last.uid!==currentUser.uid)){playMsgSound()}}
+_chatSnapFirst=false;
+_lastChatList=list;let uids=[];list.forEach(function(m){if(m.uid&&uids.indexOf(m.uid)<0)uids.push(m.uid)});await resolveUsers(uids);renderChat(list);let onChat=document.getElementById('page-chat')&&document.getElementById('page-chat').classList.contains('active');if(onChat)markChatSeen()},function(e){console.log(e);box.innerHTML='<div class="empty-state"><p>No se pudo cargar el chat.</p></div>'})}
 function stopChat(){/* se mantiene el listener para el punto rojo; no desuscribir */}
 function renderChat(list){let box=document.getElementById('chatMsgs'),near=box.scrollHeight-box.scrollTop-box.clientHeight<120,html='',prev=null;list.forEach(m=>{let t=m.createdAt&&m.createdAt.toDate?m.createdAt.toDate():new Date(),same=prev&&prev.uid===m.uid&&(t-prev.t)<300000;prev={uid:m.uid,t:t};let mine=currentUser&&currentUser.uid===m.uid;let edited=m.edited?' <span style="font-size:10px;opacity:.7">(editado)</span>':'';let handlers=mine?` data-id="${escapeHTML(m.id)}" data-text="${escapeHTML(m.text||'')}" oncontextmenu="event.preventDefault();openMsgMenu('${escapeHTML(m.id)}',event)" ontouchstart="lpStart('${escapeHTML(m.id)}',event)" ontouchend="lpCancel()" ontouchmove="lpCancel()" onmousedown="if(event.button===0)lpStart('${escapeHTML(m.id)}',event)" onmouseup="lpCancel()" onmouseleave="lpCancel()"`:'' ;let txt=`<div class="msg-text">${escapeHTML(m.text||'')}</div>`;let uInfo=(m.uid&&userCache[m.uid])?userCache[m.uid]:null;let dispName=(uInfo&&uInfo.name)||m.name||'Usuario';let dispPhoto=(uInfo&&uInfo.photoURL)||m.photo||'';html+=same?`<div class="msg grouped"${handlers}><div class="msg-av"></div><div class="msg-main">${txt}</div></div>`:`<div class="msg"${handlers}><div class="msg-av" style="cursor:pointer;" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(m.uid||'')}')">${avatarHTML(dispName,dispPhoto,36)}</div><div class="msg-main"><div class="msg-head"><b style="cursor:pointer;" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(m.uid||'')}')">${escapeHTML(dispName)}</b>${creatorSet.has(m.uid)?'<span class="badge-admin" style="background:#eab308;color:#000">CREADOR</span>':(adminSet.has(m.uid)?'<span class="badge-admin">ADMIN</span>':'')}${edited}<span class="msg-time">${fmtTime(t)}</span></div>${txt}</div></div>`});box.innerHTML=html||'<div class="empty-state"><p>Aún no hay mensajes. ¡Escribe el primero!</p></div>';if(near||chatFirst){box.scrollTop=box.scrollHeight;chatFirst=false}}
 async function sendChat(){if(!currentUser){openAuth();return}if(userBanned){showToast('Tu cuenta está restringida',true);return}if(siteSettings.chatDisabled){showToast('Chat desactivado temporalmente',true);return}if(siteSettings.maintenance){showToast('Sitio en mantenimiento',true);return}let inp=document.getElementById('chatInput'),text=inp.value.trim();if(!text)return;if(Date.now()-lastSend<1500){showToast('Más despacio',true);return}lastSend=Date.now();inp.value='';try{await db.collection('chat').add({uid:currentUser.uid,name:(myProfile&&myProfile.name)||'Usuario',photo:(myProfile&&myProfile.photoURL)||'',text:text.slice(0,500),createdAt:firebase.firestore.FieldValue.serverTimestamp()})}catch(e){console.log(e);showToast('No se pudo enviar el mensaje',true)}}
@@ -469,6 +473,35 @@ function requestNotifPermission(){
     showToast(notifEnabled?'Notificaciones activadas':'Notificaciones denegadas',!notifEnabled);
     try{localStorage.setItem('notifOk',notifEnabled?'1':'0')}catch(e){}
   });
+}
+
+let _audioCtx=null,_lastSoundAt=0;
+document.addEventListener('click',function(){try{let AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!_audioCtx)_audioCtx=new AC();if(_audioCtx.state==='suspended')_audioCtx.resume()}catch(e){}},true);
+function playMsgSound(){
+  try{
+    let now=Date.now();
+    if(now-_lastSoundAt<800)return;
+    _lastSoundAt=now;
+    let AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
+    if(!_audioCtx)_audioCtx=new AC();
+    if(_audioCtx.state==='suspended')_audioCtx.resume();
+    let t=_audioCtx.currentTime;
+    // tono tipo Discord: dos beeps cortos
+    function tone(freq,start,dur,vol){
+      let o=_audioCtx.createOscillator();
+      let g=_audioCtx.createGain();
+      o.type='sine';
+      o.frequency.value=freq;
+      g.gain.setValueAtTime(0.0001,t+start);
+      g.gain.exponentialRampToValueAtTime(vol,t+start+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+start+dur);
+      o.connect(g);g.connect(_audioCtx.destination);
+      o.start(t+start);o.stop(t+start+dur+0.02);
+    }
+    tone(880,0,0.09,0.18);
+    tone(1174.7,0.1,0.12,0.14);
+  }catch(e){}
 }
 function maybeNotify(title,body,tag){
   if(!('Notification' in window))return;
@@ -611,9 +644,18 @@ function openDM(uid){
   let u=userCache[uid]||{};
   document.getElementById('dmTitle').textContent=u.name||'Chat privado';
   if(dmUnsub){dmUnsub();dmUnsub=null}
+  let _dmFirst=true;
   dmUnsub=db.collection('dms').doc(dmChatId).collection('messages').orderBy('createdAt','asc').limitToLast(100)
     .onSnapshot(async function(sn){
       let list=sn.docs.map(function(d){return Object.assign({id:d.id},d.data())});
+      if(!_dmFirst&&list.length){
+        let last=list[list.length-1];
+        if(last.uid&&currentUser&&last.uid!==currentUser.uid){
+          playMsgSound();
+          maybeNotify('Mensaje privado',(last.name||'Amigo')+': '+(last.text||'').slice(0,80),'dm-'+dmChatId);
+        }
+      }
+      _dmFirst=false;
       let uids=list.map(function(m){return m.uid}).filter(Boolean);
       await resolveUsers(uids.concat([uid]));
       renderDM(list);
