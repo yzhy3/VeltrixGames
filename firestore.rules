@@ -1,12 +1,27 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
-    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isCreator() {
+      return signedIn() && exists(/databases/$(database)/documents/creators/$(request.auth.uid));
+    }
+    function isAdmin() {
+      return isCreator()
+        || (signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
 
+    // Solo el CREADOR puede agregar/quitar admins
     match /admins/{uid} {
       allow read: if true;
-      allow write: if false; // se crean a mano desde la consola de Firebase
+      allow create, update, delete: if isCreator();
+    }
+
+    // Creador: el primero se crea a mano en Firebase Console (una sola vez)
+    match /creators/{uid} {
+      allow read: if true;
+      allow create, update, delete: if isCreator();
     }
 
     match /users/{uid} {
@@ -39,9 +54,12 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.text is string
-        && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 500
-        && request.resource.data.createdAt == request.time;
-      allow update: if false;
+        && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 500;
+      allow update: if signedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 500;
       allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
     }
   }
