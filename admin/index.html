@@ -136,24 +136,30 @@ function viewLogin(){
 
 function viewDenied(u, extra){
   var uid = u.uid || '';
+  var email = u.email || '';
   $('app').innerHTML =
-    '<h1>Sin acceso aún</h1>'+
+    '<h1>Sin acceso</h1>'+
     (extra ? '<p class="muted" style="margin-top:8px;color:#ef4444">'+esc(extra)+'</p>' : '')+
-    '<p class="muted" style="margin-top:12px">Para ser <b style="color:#eab308">CREADOR</b>:</p>'+
-    '<ol class="muted" style="margin:12px 0 12px 18px;line-height:1.8">'+
-    '<li>Firebase Console → <b>Firestore Database</b></li>'+
-    '<li>Colección: <b>creators</b></li>'+
-    '<li>ID del documento = tu UID (abajo)</li>'+
-    '<li>Campo: <b>ok</b> = true</li>'+
-    '<li>Guarda y <b>recarga esta página</b></li>'+
-    '</ol>'+
+    '<p class="muted" style="margin-top:12px">Tu cuenta no tiene permisos de administrador.</p>'+
+    '<div class="card" style="margin-top:16px">'+
+    '<label>UID</label>'+
     '<code>'+esc(uid)+'</code>'+
-    '<button class="w sec" id="btnCopy">Copiar UID</button>'+
-    '<p class="muted" style="margin-top:12px">Email: '+esc(u.email||'')+'</p>'+
-    '<button class="sec w" style="margin-top:16px" id="btnOut">Cerrar sesión</button>';
-  $('btnCopy').onclick = function(){
+    '<button class="w sec" id="btnCopyUid" style="margin-bottom:12px">Copiar UID</button>'+
+    '<label>Gmail / Email</label>'+
+    '<code>'+esc(email||'(sin email)')+'</code>'+
+    '<button class="w sec" id="btnCopyMail">Copiar email</button>'+
+    '</div>'+
+    '<p class="muted" style="margin-top:14px;font-size:12px">Si quieres ser creador, contacta al dueño del sitio con tu UID.</p>'+
+    '<button class="sec w" style="margin-top:16px" id="btnOut">Cerrar sesión</button>'+
+    '<p style="text-align:center;margin-top:12px"><a href="/" style="color:#A855F7;font-size:13px">← Volver a la web</a></p>';
+  $('btnCopyUid').onclick = function(){
     if (navigator.clipboard) navigator.clipboard.writeText(uid).then(function(){ toast('UID copiado'); });
     else toast(uid);
+  };
+  $('btnCopyMail').onclick = function(){
+    if (!email) return toast('Sin email', 1);
+    if (navigator.clipboard) navigator.clipboard.writeText(email).then(function(){ toast('Email copiado'); });
+    else toast(email);
   };
   $('btnOut').onclick = function(){ auth.signOut(); };
 }
