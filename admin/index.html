@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="es"><head>
+<html lang="es">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Admin · Veltrix Games</title>
@@ -10,10 +11,10 @@ body{background:#050506;color:#f8fafc;font-family:Inter,-apple-system,BlinkMacSy
 h1{font-size:20px;font-weight:900;margin-bottom:4px}
 h2{font-size:14px;margin:20px 0 10px;color:#A855F7;text-transform:uppercase;letter-spacing:.05em}
 .card{background:#0E0E12;border:1px solid #1C1C24;border-radius:16px;padding:16px;margin-bottom:12px}
-input,textarea{width:100%;background:#050506;border:1px solid #1C1C24;border-radius:12px;padding:12px;color:#f8fafc;font-size:14px;margin-bottom:10px;outline:none;font-family:inherit;-webkit-appearance:none;appearance:none}
+input,textarea{width:100%;background:#050506;border:1px solid #1C1C24;border-radius:12px;padding:12px;color:#f8fafc;font-size:14px;margin-bottom:10px;outline:none;font-family:inherit}
 textarea{min-height:70px}
 label{font-size:11px;color:#94a3b8;display:block;margin:0 0 4px}
-button{font-family:inherit;border:none;border-radius:12px;padding:12px 16px;font-weight:700;font-size:13px;cursor:pointer;background:#A855F7;color:#fff;-webkit-appearance:none}
+button{font-family:inherit;border:none;border-radius:12px;padding:12px 16px;font-weight:700;font-size:13px;cursor:pointer;background:#A855F7;color:#fff}
 button.sec{background:#1C1C24}button.dng{background:#ef4444}button.w{width:100%}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -25,125 +26,189 @@ button.sec{background:#1C1C24}button.dng{background:#ef4444}button.w{width:100%}
 code{background:#1C1C24;padding:4px 8px;border-radius:6px;font-size:12px;word-break:break-all;display:block;margin:8px 0}
 .badge{display:inline-block;background:#A855F7;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:6px;margin-left:6px}
 .badge.creator{background:#eab308;color:#000}
-.muted{color:#94a3b8;font-size:13px}
+.muted{color:#94a3b8;font-size:13px;line-height:1.5}
 </style>
-</head><body>
+</head>
+<body>
 <div class="wrap" id="app"><p class="muted">Cargando…</p></div>
 <div id="toast"></div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="/firebase-config.js"></script>
-<script src="../firebase-config.js"></script>
 <script>
-var auth, db, editId = null, isCreator = false, isAdmin = false;
+// ===== CONFIG EMBEBIDA (no depende de archivo externo) =====
+var FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCvgZNNH3KrkDJigjt0P0NHQPrju6lQwaQ",
+  authDomain: "veltrixgames-660d6.firebaseapp.com",
+  databaseURL: "https://veltrixgames-660d6-default-rtdb.firebaseio.com",
+  projectId: "veltrixgames-660d6",
+  storageBucket: "veltrixgames-660d6.firebasestorage.app",
+  messagingSenderId: "130031637936",
+  appId: "1:130031637936:web:2c6bda5dae510ce4013275",
+  measurementId: "G-JG68X2ZE3C"
+};
+
+var auth = null, db = null, editId = null, isCreator = false, isAdmin = false;
 
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-function toast(msg, err){ var t=$('toast'); t.textContent=msg; t.className=err?'e s':'s'; setTimeout(function(){ t.className=''; }, 2800); }
-
-// Compatible con window.FIREBASE_CONFIG (firebase-config.js)
-var cfg = window.FIREBASE_CONFIG || window.firebaseConfig || null;
-if (!cfg || !cfg.apiKey) {
-  document.getElementById('app').innerHTML = '<h1>Error de config</h1><p class="muted">No se encontró firebase-config.js o falta el apiKey. Sube el archivo a la raíz del sitio.</p>';
-} else {
-  try {
-    firebase.initializeApp(cfg);
-    auth = firebase.auth();
-    db = firebase.firestore();
-  } catch (e) {
-    document.getElementById('app').innerHTML = '<h1>Error Firebase</h1><p class="muted">' + (e.message || e) + '</p>';
-  }
+function toast(msg, err){
+  var t = $('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.className = err ? 'e s' : 's';
+  setTimeout(function(){ t.className = ''; }, 2800);
+}
+function showErr(title, msg){
+  $('app').innerHTML = '<h1>'+esc(title)+'</h1><p class="muted" style="margin-top:12px">'+esc(msg)+'</p><button class="sec w" style="margin-top:16px" onclick="location.reload()">Reintentar</button>';
 }
 
-if (auth) {
-  auth.onAuthStateChanged(function(u){
-    if(!u){ viewLogin(); return; }
-    Promise.all([
-      db.collection('creators').doc(u.uid).get(),
-      db.collection('admins').doc(u.uid).get()
-    ]).then(function(res){
-      isCreator = res[0].exists;
-      isAdmin = isCreator || res[1].exists;
-      if(isAdmin) viewPanel(u);
-      else viewDenied(u);
-    }).catch(function(e){
-      console.log(e);
-      // Si falla Firestore (reglas), igual mostramos denied con UID
-      viewDenied(u);
+// Init
+try {
+  if (typeof firebase === 'undefined') {
+    showErr('Firebase no cargó', 'Revisa tu conexión o bloqueadores de scripts.');
+  } else {
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    auth = firebase.auth();
+    db = firebase.firestore();
+
+    auth.onAuthStateChanged(function(u){
+      try {
+        if (!u) { viewLogin(); return; }
+        // Timeout por si Firestore no responde
+        var done = false;
+        var timer = setTimeout(function(){
+          if (!done) {
+            done = true;
+            viewDenied(u, 'Firestore tardó demasiado. Publica las reglas o revisa la consola.');
+          }
+        }, 8000);
+
+        Promise.all([
+          db.collection('creators').doc(u.uid).get(),
+          db.collection('admins').doc(u.uid).get()
+        ]).then(function(res){
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          isCreator = res[0].exists;
+          isAdmin = isCreator || res[1].exists;
+          if (isAdmin) viewPanel(u);
+          else viewDenied(u);
+        }).catch(function(e){
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          console.error(e);
+          viewDenied(u, e.message || 'Error leyendo roles');
+        });
+      } catch (e) {
+        showErr('Error', e.message || String(e));
+      }
     });
-  });
+  }
+} catch (e) {
+  showErr('Error al iniciar', e.message || String(e));
 }
 
 function viewLogin(){
-  $('app').innerHTML = '<h1>Admin · Veltrix Games</h1><div class="card" style="margin-top:16px"><input id="em" type="email" placeholder="Correo"><input id="pw" type="password" placeholder="Contraseña"><button class="w" onclick="login()">Entrar</button><button class="w sec" style="margin-top:8px" onclick="google()">Continuar con Google</button></div>';
+  $('app').innerHTML =
+    '<h1>Admin · Veltrix Games</h1>'+
+    '<div class="card" style="margin-top:16px">'+
+    '<input id="em" type="email" placeholder="Correo" autocomplete="email">'+
+    '<input id="pw" type="password" placeholder="Contraseña" autocomplete="current-password">'+
+    '<button class="w" id="btnLogin">Entrar</button>'+
+    '<button class="w sec" style="margin-top:8px" id="btnGoogle">Continuar con Google</button>'+
+    '</div>'+
+    '<p class="muted" style="margin-top:12px;text-align:center"><a href="/" style="color:#A855F7">← Volver a la web</a></p>';
+  $('btnLogin').onclick = function(){
+    var em = $('em').value.trim(), pw = $('pw').value;
+    if(!em||!pw) return toast('Completa los campos', 1);
+    auth.signInWithEmailAndPassword(em, pw).catch(function(){ toast('Correo o contraseña incorrectos', 1); });
+  };
+  $('btnGoogle').onclick = function(){
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){
+      toast(e.code === 'auth/popup-closed-by-user' ? 'Popup cerrado' : (e.message||'Error'), 1);
+    });
+  };
 }
-function login(){ auth.signInWithEmailAndPassword($('em').value.trim(), $('pw').value).catch(function(){ toast('Correo o contraseña incorrectos',1); }); }
-function google(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){ toast(e.code||'Error',1); }); }
 
-function viewDenied(u){
-  $('app').innerHTML = '<h1>Sin acceso aún</h1>'+
-    '<p class="muted" style="margin-top:12px">Para ser <b style="color:#eab308">CREADOR</b> (dueño del sitio):</p>'+
-    '<ol class="muted" style="margin:12px 0 12px 18px;line-height:1.7">'+
-    '<li>Abre <b>Firebase Console</b> → Firestore Database</li>'+
-    '<li>Crea la colección <b>creators</b></li>'+
-    '<li>Añade un documento cuyo <b>ID</b> sea exactamente este UID:</li>'+
+function viewDenied(u, extra){
+  var uid = u.uid || '';
+  $('app').innerHTML =
+    '<h1>Sin acceso aún</h1>'+
+    (extra ? '<p class="muted" style="margin-top:8px;color:#ef4444">'+esc(extra)+'</p>' : '')+
+    '<p class="muted" style="margin-top:12px">Para ser <b style="color:#eab308">CREADOR</b>:</p>'+
+    '<ol class="muted" style="margin:12px 0 12px 18px;line-height:1.8">'+
+    '<li>Firebase Console → <b>Firestore Database</b></li>'+
+    '<li>Colección: <b>creators</b></li>'+
+    '<li>ID del documento = tu UID (abajo)</li>'+
+    '<li>Campo: <b>ok</b> = true</li>'+
+    '<li>Guarda y <b>recarga esta página</b></li>'+
     '</ol>'+
-    '<code id="myUid">'+esc(u.uid)+'</code>'+
-    '<button class="w sec" style="margin:8px 0" onclick="navigator.clipboard.writeText(\''+esc(u.uid)+'\');toast(\''UID copiado\')">Copiar UID</button>'+
-    '<p class="muted" style="margin-top:8px">Campo del documento: pon <code style="display:inline;padding:2px 6px">ok = true</code> (o cualquier campo).</p>'+
-    '<p class="muted" style="margin-top:8px">Luego <b>recarga esta página</b>. Verás el panel completo y podrás dar admin a otros.</p>'+
+    '<code>'+esc(uid)+'</code>'+
+    '<button class="w sec" id="btnCopy">Copiar UID</button>'+
     '<p class="muted" style="margin-top:12px">Email: '+esc(u.email||'')+'</p>'+
-    '<button class="sec w" style="margin-top:16px" onclick="auth.signOut()">Cerrar sesión</button>';
+    '<button class="sec w" style="margin-top:16px" id="btnOut">Cerrar sesión</button>';
+  $('btnCopy').onclick = function(){
+    if (navigator.clipboard) navigator.clipboard.writeText(uid).then(function(){ toast('UID copiado'); });
+    else toast(uid);
+  };
+  $('btnOut').onclick = function(){ auth.signOut(); };
 }
 
 function viewPanel(u){
   var roleBadge = isCreator ? '<span class="badge creator">CREADOR</span>' : '<span class="badge">ADMIN</span>';
-  var creatorSection = '';
-  if(isCreator){
-    creatorSection = `
-      <h2>Gestionar Admins</h2>
-      <div class="card">
-        <p class="muted" style="margin-bottom:10px">Solo el creador puede agregar o quitar admins. Pega el UID del usuario (lo ve en su perfil o en Firebase Auth).</p>
-        <label>UID del nuevo admin</label>
-        <input id="adminUid" placeholder="Ej: xYz123AbC...">
-        <button class="w" onclick="addAdmin()">Agregar admin</button>
-        <div id="adminsList" style="margin-top:14px"></div>
-      </div>`;
+  var creatorHTML = '';
+  if (isCreator) {
+    creatorHTML =
+      '<h2>Gestionar Admins</h2>'+
+      '<div class="card">'+
+      '<p class="muted" style="margin-bottom:10px">Solo el creador puede agregar o quitar admins. Usa el UID del usuario.</p>'+
+      '<label>UID del nuevo admin</label>'+
+      '<input id="adminUid" placeholder="UID del usuario">'+
+      '<button class="w" id="btnAddAdmin">Agregar admin</button>'+
+      '<div id="adminsList" style="margin-top:14px"></div>'+
+      '</div>';
   }
 
-  $('app').innerHTML = `
-    <div class="row" style="justify-content:space-between;margin-bottom:8px">
-      <div><h1>Panel Admin ${roleBadge}</h1><p class="muted" style="font-size:12px">${esc(u.email||'')}</p></div>
-      <div class="row"><a href="/" style="color:#A855F7;font-size:13px">Ver web</a><button class="sec" onclick="auth.signOut()">Salir</button></div>
-    </div>
-    ${creatorSection}
-    <h2 id="ft">Nuevo juego</h2>
-    <div class="card">
-      <label>Título *</label><input id="f_title">
-      <div class="g"><div><label>Desarrollador</label><input id="f_dev"></div><div><label>Categoría</label><input id="f_cat" placeholder="Ej: Mods"></div></div>
-      <label>Imagen (enlace https) *</label><input id="f_img" placeholder="https://...">
-      <label>Enlace de descarga APK *</label><input id="f_apk" placeholder="https://...">
-      <label>Descripción</label><textarea id="f_desc"></textarea>
-      <label>Novedades</label><textarea id="f_log"></textarea>
-      <label>Seguridad de datos</label><input id="f_sec">
-      <div class="g"><div><label>Texto del tipo (ej: MOD APK)</label><input id="f_badge"></div><div><label>Etiqueta (ej: NUEVO)</label><input id="f_label"></div></div>
-      <label>Color de la etiqueta</label><input id="f_color" value="#EF4444">
-      <label>Capturas / videos YouTube (un enlace por línea)</label><textarea id="f_media"></textarea>
-      <div class="row" style="margin-bottom:12px"><input type="checkbox" id="f_active" checked style="width:auto;margin:0"><label style="margin:0;font-size:13px;color:#f8fafc">Activo (visible en la web)</label></div>
-      <div class="row"><button class="w" onclick="save()">Guardar juego</button><button class="sec" onclick="resetForm()">Limpiar</button></div>
-    </div>
-    <h2>Juegos</h2>
-    <div id="list"></div>`;
+  $('app').innerHTML =
+    '<div class="row" style="justify-content:space-between;margin-bottom:8px">'+
+    '<div><h1>Panel Admin '+roleBadge+'</h1><p class="muted" style="font-size:12px">'+esc(u.email||'')+'</p></div>'+
+    '<div class="row"><a href="/" style="color:#A855F7;font-size:13px">Ver web</a><button class="sec" id="btnOut2">Salir</button></div>'+
+    '</div>'+
+    creatorHTML+
+    '<h2 id="ft">Nuevo juego</h2>'+
+    '<div class="card">'+
+    '<label>Título *</label><input id="f_title">'+
+    '<div class="g"><div><label>Desarrollador</label><input id="f_dev"></div><div><label>Categoría</label><input id="f_cat" placeholder="Ej: Mods"></div></div>'+
+    '<label>Imagen (https) *</label><input id="f_img" placeholder="https://...">'+
+    '<label>Enlace APK *</label><input id="f_apk" placeholder="https://...">'+
+    '<label>Descripción</label><textarea id="f_desc"></textarea>'+
+    '<label>Novedades</label><textarea id="f_log"></textarea>'+
+    '<label>Seguridad de datos</label><input id="f_sec">'+
+    '<div class="g"><div><label>Tipo (ej: MOD APK)</label><input id="f_badge"></div><div><label>Etiqueta (ej: NUEVO)</label><input id="f_label"></div></div>'+
+    '<label>Color etiqueta</label><input id="f_color" value="#EF4444">'+
+    '<label>Capturas / YouTube (uno por línea)</label><textarea id="f_media"></textarea>'+
+    '<div class="row" style="margin-bottom:12px"><input type="checkbox" id="f_active" checked style="width:auto;margin:0"><label style="margin:0;font-size:13px;color:#f8fafc">Activo</label></div>'+
+    '<div class="row"><button class="w" id="btnSave">Guardar juego</button><button class="sec" id="btnClear">Limpiar</button></div>'+
+    '</div>'+
+    '<h2>Juegos</h2><div id="list"></div>';
 
-  if(isCreator) loadAdmins();
+  $('btnOut2').onclick = function(){ auth.signOut(); };
+  $('btnSave').onclick = save;
+  $('btnClear').onclick = resetForm;
+  if (isCreator) {
+    $('btnAddAdmin').onclick = addAdmin;
+    loadAdmins();
+  }
   loadList();
 }
 
 function addAdmin(){
-  if(!isCreator) return toast('Solo el creador puede hacer esto',1);
   var uid = $('adminUid').value.trim();
-  if(!uid || uid.length < 10) return toast('UID inválido',1);
+  if (!uid || uid.length < 8) return toast('UID inválido', 1);
   db.collection('admins').doc(uid).set({
     addedBy: auth.currentUser.uid,
     addedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -151,45 +216,51 @@ function addAdmin(){
     toast('Admin agregado');
     $('adminUid').value = '';
     loadAdmins();
-  }).catch(function(e){ console.log(e); toast('No se pudo agregar (¿eres creador?)',1); });
+  }).catch(function(e){
+    console.error(e);
+    toast('No se pudo agregar: ' + (e.message||''), 1);
+  });
 }
 
 function removeAdmin(uid){
-  if(!isCreator) return;
-  if(!confirm('¿Quitar admin a este usuario?')) return;
+  if (!confirm('¿Quitar admin?')) return;
   db.collection('admins').doc(uid).delete().then(function(){
     toast('Admin eliminado');
     loadAdmins();
-  }).catch(function(){ toast('No se pudo quitar',1); });
+  }).catch(function(){ toast('No se pudo quitar', 1); });
 }
 
 function loadAdmins(){
   db.collection('admins').get().then(function(s){
     var box = $('adminsList');
-    if(!box) return;
-    if(!s.docs.length){
-      box.innerHTML = '<p class="muted">Aún no hay admins.</p>';
-      return;
-    }
+    if (!box) return;
+    if (!s.docs.length) { box.innerHTML = '<p class="muted">Aún no hay admins.</p>'; return; }
     box.innerHTML = s.docs.map(function(d){
-      return '<div class="row" style="justify-content:space-between;padding:8px 0;border-bottom:1px solid #1C1C24"><code style="margin:0;flex:1">'+esc(d.id)+'</code><button class="dng" style="padding:8px 12px" onclick="removeAdmin(\''+esc(d.id)+'\')">Quitar</button></div>';
+      return '<div class="row" style="justify-content:space-between;padding:8px 0;border-bottom:1px solid #1C1C24">'+
+        '<code style="margin:0;flex:1">'+esc(d.id)+'</code>'+
+        '<button class="dng" style="padding:8px 12px" data-uid="'+esc(d.id)+'">Quitar</button></div>';
     }).join('');
+    box.querySelectorAll('button[data-uid]').forEach(function(btn){
+      btn.onclick = function(){ removeAdmin(btn.getAttribute('data-uid')); };
+    });
   }).catch(function(){});
 }
 
 function resetForm(){
   editId = null;
-  $('ft').textContent = 'Nuevo juego';
-  ['f_title','f_dev','f_cat','f_img','f_apk','f_desc','f_log','f_sec','f_badge','f_label','f_media'].forEach(function(id){ $(id).value=''; });
-  $('f_color').value = '#EF4444';
-  $('f_active').checked = true;
+  var ft = $('ft'); if (ft) ft.textContent = 'Nuevo juego';
+  ['f_title','f_dev','f_cat','f_img','f_apk','f_desc','f_log','f_sec','f_badge','f_label','f_media'].forEach(function(id){
+    var el = $(id); if (el) el.value = '';
+  });
+  var c = $('f_color'); if (c) c.value = '#EF4444';
+  var a = $('f_active'); if (a) a.checked = true;
 }
 
 function save(){
   var title = $('f_title').value.trim();
   var img = $('f_img').value.trim();
   var apk = $('f_apk').value.trim();
-  if(!title || !img || !apk) return toast('Título, imagen y APK son obligatorios',1);
+  if (!title || !img || !apk) return toast('Título, imagen y APK obligatorios', 1);
   var media = ($('f_media').value||'').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).map(function(url){
     return { type: /youtu\.?be/.test(url) ? 'youtube' : 'image', url: url };
   });
@@ -212,48 +283,68 @@ function save(){
   var p = editId ? Promise.resolve() : db.collection('games').doc(id).set({ createdAt: firebase.firestore.FieldValue.serverTimestamp() });
   p.then(function(){ return db.collection('games').doc(id).set(data, { merge: true }); })
     .then(function(){ toast('Juego guardado'); resetForm(); loadList(); })
-    .catch(function(e){ console.log(e); toast('No se pudo guardar (revisa las reglas)',1); });
+    .catch(function(e){ console.error(e); toast('Error al guardar: '+(e.message||''), 1); });
 }
 
 function loadList(){
   db.collection('games').get().then(function(s){
-    var l = s.docs.map(function(d){ var x=d.data(); x.id=d.id; return x; })
-      .sort(function(a,b){ return (b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0)-(a.createdAt&&a.createdAt.toMillis?a.createdAt.toMillis():0); });
+    var l = s.docs.map(function(d){ var x = d.data(); x.id = d.id; return x; })
+      .sort(function(a,b){ return (b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0) - (a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0); });
     window._l = l;
-    $('list').innerHTML = l.length ? l.map(function(g){
-      return '<div class="card"><div class="item"><img src="'+esc(g.img)+'" alt=""><div style="flex:1;min-width:0"><b>'+esc(g.title)+'</b><small>'+esc(g.category||'Sin categoría')+' · '+(g.is_active===false?'Oculto':'Visible')+'</small></div></div><div class="row"><button class="sec" onclick="edit(\''+esc(g.id)+'\')">Editar</button><button class="sec" onclick="toggle(\''+esc(g.id)+'\')">'+(g.is_active===false?'Mostrar':'Ocultar')+'</button><button class="dng" onclick="del(\''+esc(g.id)+'\')">Eliminar</button></div></div>';
-    }).join('') : '<p class="muted">Aún no hay juegos creados desde el panel.</p>';
-  }).catch(function(){ $('list').textContent = 'No se pudo cargar la lista.'; });
+    var list = $('list');
+    if (!list) return;
+    list.innerHTML = l.length ? l.map(function(g){
+      return '<div class="card"><div class="item"><img src="'+esc(g.img)+'" alt=""><div style="flex:1;min-width:0"><b>'+esc(g.title)+'</b><small>'+esc(g.category||'')+' · '+(g.is_active===false?'Oculto':'Visible')+'</small></div></div>'+
+        '<div class="row">'+
+        '<button class="sec" data-act="edit" data-id="'+esc(g.id)+'">Editar</button>'+
+        '<button class="sec" data-act="toggle" data-id="'+esc(g.id)+'">'+(g.is_active===false?'Mostrar':'Ocultar')+'</button>'+
+        '<button class="dng" data-act="del" data-id="'+esc(g.id)+'">Eliminar</button></div></div>';
+    }).join('') : '<p class="muted">Aún no hay juegos.</p>';
+    list.querySelectorAll('button[data-act]').forEach(function(btn){
+      var act = btn.getAttribute('data-act'), id = btn.getAttribute('data-id');
+      btn.onclick = function(){
+        if (act === 'edit') edit(id);
+        else if (act === 'toggle') toggle(id);
+        else if (act === 'del') del(id);
+      };
+    });
+  }).catch(function(e){
+    var list = $('list');
+    if (list) list.innerHTML = '<p class="muted">No se pudo cargar: '+esc(e.message||'')+'</p>';
+  });
 }
 
 function edit(id){
-  var g = (window._l||[]).filter(function(x){ return x.id===id; })[0];
-  if(!g) return;
+  var g = (window._l||[]).filter(function(x){ return x.id === id; })[0];
+  if (!g) return;
   editId = id;
-  $('ft').textContent = 'Editando: '+g.title;
-  $('f_title').value = g.title||'';
-  $('f_dev').value = g.developer||'';
-  $('f_cat').value = g.category||'';
-  $('f_img').value = g.img||'';
-  $('f_apk').value = g.apk_url||'';
-  $('f_desc').value = g.desc_game||'';
-  $('f_log').value = g.changelog||'';
-  $('f_sec').value = g.security_info||'';
-  $('f_badge').value = g.badge_text||'';
-  $('f_label').value = g.label_text||'';
-  $('f_color').value = g.label_color||'#EF4444';
+  $('ft').textContent = 'Editando: ' + g.title;
+  $('f_title').value = g.title || '';
+  $('f_dev').value = g.developer || '';
+  $('f_cat').value = g.category || '';
+  $('f_img').value = g.img || '';
+  $('f_apk').value = g.apk_url || '';
+  $('f_desc').value = g.desc_game || '';
+  $('f_log').value = g.changelog || '';
+  $('f_sec').value = g.security_info || '';
+  $('f_badge').value = g.badge_text || '';
+  $('f_label').value = g.label_text || '';
+  $('f_color').value = g.label_color || '#EF4444';
   $('f_media').value = (g.media||[]).map(function(m){ return m.url; }).join('\n');
   $('f_active').checked = g.is_active !== false;
   window.scrollTo(0,0);
 }
+
 function toggle(id){
-  var g = (window._l||[]).filter(function(x){ return x.id===id; })[0];
-  if(!g) return;
-  db.collection('games').doc(id).update({ is_active: g.is_active === false }).then(loadList).catch(function(){ toast('No se pudo cambiar',1); });
+  var g = (window._l||[]).filter(function(x){ return x.id === id; })[0];
+  if (!g) return;
+  db.collection('games').doc(id).update({ is_active: g.is_active === false }).then(loadList).catch(function(){ toast('No se pudo cambiar', 1); });
 }
+
 function del(id){
-  if(!confirm('¿Eliminar este juego?')) return;
-  db.collection('games').doc(id).delete().then(function(){ toast('Juego eliminado'); loadList(); }).catch(function(){ toast('No se pudo eliminar',1); });
+  if (!confirm('¿Eliminar este juego?')) return;
+  db.collection('games').doc(id).delete().then(function(){ toast('Eliminado'); loadList(); }).catch(function(){ toast('No se pudo eliminar', 1); });
 }
 </script>
-</body></html>
+</body>
+</html>
