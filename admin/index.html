@@ -1,356 +1,352 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
+<html lang="es"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Admin · Veltrix Games</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:#050506;color:#f8fafc;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;padding:16px;padding-bottom:calc(40px + env(safe-area-inset-bottom))}
-.wrap{max-width:640px;margin:0 auto}
-h1{font-size:20px;font-weight:900;margin-bottom:4px}
-h2{font-size:14px;margin:20px 0 10px;color:#A855F7;text-transform:uppercase;letter-spacing:.05em}
+.wrap{max-width:720px;margin:0 auto}
+h1{font-size:20px;font-weight:900}h2{font-size:14px;margin:20px 0 10px;color:#A855F7;text-transform:uppercase;letter-spacing:.05em}
 .card{background:#0E0E12;border:1px solid #1C1C24;border-radius:16px;padding:16px;margin-bottom:12px}
-input,textarea{width:100%;background:#050506;border:1px solid #1C1C24;border-radius:12px;padding:12px;color:#f8fafc;font-size:14px;margin-bottom:10px;outline:none;font-family:inherit}
-textarea{min-height:70px}
-label{font-size:11px;color:#94a3b8;display:block;margin:0 0 4px}
+input,textarea,select{width:100%;background:#050506;border:1px solid #1C1C24;border-radius:12px;padding:12px;color:#f8fafc;font-size:14px;margin-bottom:10px;outline:none;font-family:inherit}
+textarea{min-height:70px}label{font-size:11px;color:#94a3b8;display:block;margin:0 0 4px}
 button{font-family:inherit;border:none;border-radius:12px;padding:12px 16px;font-weight:700;font-size:13px;cursor:pointer;background:#A855F7;color:#fff}
-button.sec{background:#1C1C24}button.dng{background:#ef4444}button.w{width:100%}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button.sec{background:#1C1C24}button.dng{background:#ef4444}button.ok{background:#10b981}button.w{width:100%}button:disabled{opacity:.5}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .item{display:flex;gap:10px;align-items:center;margin-bottom:10px}
 .item img{width:48px;height:48px;border-radius:10px;object-fit:cover;background:#1C1C24}
 .item b{font-size:14px}.item small{display:block;color:#94a3b8;font-size:11px}
-#toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 20px;border-radius:12px;font-size:13px;font-weight:700;opacity:0;transition:.3s;z-index:9;pointer-events:none}
+#toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 20px;border-radius:12px;font-size:13px;font-weight:700;opacity:0;transition:.3s;z-index:99;pointer-events:none}
 #toast.e{background:#ef4444}#toast.s{opacity:1}
 code{background:#1C1C24;padding:4px 8px;border-radius:6px;font-size:12px;word-break:break-all;display:block;margin:8px 0}
 .badge{display:inline-block;background:#A855F7;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:6px;margin-left:6px}
-.badge.creator{background:#eab308;color:#000}
+.badge.cr{background:#eab308;color:#000}.badge.on{background:#10b981}.badge.off{background:#ef4444}
 .muted{color:#94a3b8;font-size:13px;line-height:1.5}
-</style>
-</head>
-<body>
-<div class="wrap" id="app"><p class="muted">Cargando…</p></div>
-<div id="toast"></div>
-
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:14px 0;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.tab{flex-shrink:0;padding:10px 14px;border-radius:10px;border:1px solid #1C1C24;background:#0E0E12;color:#94a3b8;font-weight:700;font-size:12px;cursor:pointer}
+.tab.on{background:#A855F7;color:#fff;border-color:transparent}
+.panel{display:none}.panel.on{display:block}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #1C1C24}
+.switch:last-child{border-bottom:none}
+.sw{width:48px;height:28px;border-radius:14px;background:#1C1C24;position:relative;cursor:pointer;flex-shrink:0;transition:.2s}
+.sw.on{background:#A855F7}
+.sw i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on i{left:23px}
+.stat{text-align:center;padding:12px;background:#050506;border-radius:12px;border:1px solid #1C1C24}
+.stat b{display:block;font-size:22px;font-weight:900;color:#A855F7}
+.stat span{font-size:11px;color:#94a3b8}
+</style></head><body>
+<div class="wrap" id="app"><p class="muted">Cargando…</p></div><div id="toast"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-// ===== CONFIG EMBEBIDA (no depende de archivo externo) =====
-var FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCvgZNNH3KrkDJigjt0P0NHQPrju6lQwaQ",
-  authDomain: "veltrixgames-660d6.firebaseapp.com",
-  databaseURL: "https://veltrixgames-660d6-default-rtdb.firebaseio.com",
-  projectId: "veltrixgames-660d6",
-  storageBucket: "veltrixgames-660d6.firebasestorage.app",
-  messagingSenderId: "130031637936",
-  appId: "1:130031637936:web:2c6bda5dae510ce4013275",
-  measurementId: "G-JG68X2ZE3C"
-};
+var CFG={apiKey:"AIzaSyCvgZNNH3KrkDJigjt0P0NHQPrju6lQwaQ",authDomain:"veltrixgames-660d6.firebaseapp.com",databaseURL:"https://veltrixgames-660d6-default-rtdb.firebaseio.com",projectId:"veltrixgames-660d6",storageBucket:"veltrixgames-660d6.firebasestorage.app",messagingSenderId:"130031637936",appId:"1:130031637936:web:2c6bda5dae510ce4013275",measurementId:"G-JG68X2ZE3C"};
+var auth,db,editId=null,isCreator=false,isAdmin=false,settings={};
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function toast(m,e){var t=$('toast');t.textContent=m;t.className=e?'e s':'s';setTimeout(function(){t.className=''},2800)}
+function tab(name){document.querySelectorAll('.tab').forEach(function(el){el.classList.toggle('on',el.dataset.t===name)});document.querySelectorAll('.panel').forEach(function(el){el.classList.toggle('on',el.id==='p-'+name)});if(name==='bans')loadBans();if(name==='chat')loadChatMod();if(name==='stats')loadStats();if(name==='users')loadUsers();if(name==='admins'&&isCreator)loadAdmins()}
 
-var auth = null, db = null, editId = null, isCreator = false, isAdmin = false;
-
-function $(id){ return document.getElementById(id); }
-function esc(s){ return String(s||'').replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-function toast(msg, err){
-  var t = $('toast');
-  if(!t) return;
-  t.textContent = msg;
-  t.className = err ? 'e s' : 's';
-  setTimeout(function(){ t.className = ''; }, 2800);
-}
-function showErr(title, msg){
-  $('app').innerHTML = '<h1>'+esc(title)+'</h1><p class="muted" style="margin-top:12px">'+esc(msg)+'</p><button class="sec w" style="margin-top:16px" onclick="location.reload()">Reintentar</button>';
-}
-
-// Init
-try {
-  if (typeof firebase === 'undefined') {
-    showErr('Firebase no cargó', 'Revisa tu conexión o bloqueadores de scripts.');
-  } else {
-    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-    auth = firebase.auth();
-    db = firebase.firestore();
-
-    auth.onAuthStateChanged(function(u){
-      try {
-        if (!u) { viewLogin(); return; }
-        // Timeout por si Firestore no responde
-        var done = false;
-        var timer = setTimeout(function(){
-          if (!done) {
-            done = true;
-            viewDenied(u, 'Firestore tardó demasiado. Publica las reglas o revisa la consola.');
-          }
-        }, 8000);
-
-        Promise.all([
-          db.collection('creators').doc(u.uid).get(),
-          db.collection('admins').doc(u.uid).get()
-        ]).then(function(res){
-          if (done) return;
-          done = true;
-          clearTimeout(timer);
-          isCreator = res[0].exists;
-          isAdmin = isCreator || res[1].exists;
-          if (isAdmin) viewPanel(u);
-          else viewDenied(u);
-        }).catch(function(e){
-          if (done) return;
-          done = true;
-          clearTimeout(timer);
-          console.error(e);
-          viewDenied(u, e.message || 'Error leyendo roles');
-        });
-      } catch (e) {
-        showErr('Error', e.message || String(e));
-      }
-    });
-  }
-} catch (e) {
-  showErr('Error al iniciar', e.message || String(e));
-}
+firebase.initializeApp(CFG);auth=firebase.auth();db=firebase.firestore();
+auth.onAuthStateChanged(function(u){
+  if(!u){viewLogin();return}
+  Promise.all([db.collection('creators').doc(u.uid).get(),db.collection('admins').doc(u.uid).get()])
+    .then(function(r){isCreator=r[0].exists;isAdmin=isCreator||r[1].exists;if(isAdmin)viewPanel(u);else viewDenied(u)})
+    .catch(function(){viewDenied(u)});
+});
 
 function viewLogin(){
-  $('app').innerHTML =
-    '<h1>Admin · Veltrix Games</h1>'+
-    '<div class="card" style="margin-top:16px">'+
-    '<input id="em" type="email" placeholder="Correo" autocomplete="email">'+
-    '<input id="pw" type="password" placeholder="Contraseña" autocomplete="current-password">'+
-    '<button class="w" id="btnLogin">Entrar</button>'+
-    '<button class="w sec" style="margin-top:8px" id="btnGoogle">Continuar con Google</button>'+
-    '</div>'+
-    '<p class="muted" style="margin-top:12px;text-align:center"><a href="/" style="color:#A855F7">← Volver a la web</a></p>';
-  $('btnLogin').onclick = function(){
-    var em = $('em').value.trim(), pw = $('pw').value;
-    if(!em||!pw) return toast('Completa los campos', 1);
-    auth.signInWithEmailAndPassword(em, pw).catch(function(){ toast('Correo o contraseña incorrectos', 1); });
-  };
-  $('btnGoogle').onclick = function(){
-    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){
-      toast(e.code === 'auth/popup-closed-by-user' ? 'Popup cerrado' : (e.message||'Error'), 1);
-    });
-  };
+  $('app').innerHTML='<h1>Admin · Veltrix Games</h1><div class="card" style="margin-top:16px"><input id="em" type="email" placeholder="Correo"><input id="pw" type="password" placeholder="Contraseña"><button class="w" onclick="login()">Entrar</button><button class="w sec" style="margin-top:8px" onclick="google()">Continuar con Google</button></div><p class="muted" style="margin-top:12px;text-align:center"><a href="/" style="color:#A855F7">← Volver a la web</a></p>';
 }
-
-function viewDenied(u, extra){
-  var uid = u.uid || '';
-  var email = u.email || '';
-  $('app').innerHTML =
-    '<h1>Sin acceso</h1>'+
-    (extra ? '<p class="muted" style="margin-top:8px;color:#ef4444">'+esc(extra)+'</p>' : '')+
-    '<p class="muted" style="margin-top:12px">Tu cuenta no tiene permisos de administrador.</p>'+
-    '<div class="card" style="margin-top:16px">'+
-    '<label>UID</label>'+
-    '<code>'+esc(uid)+'</code>'+
-    '<button class="w sec" id="btnCopyUid" style="margin-bottom:12px">Copiar UID</button>'+
-    '<label>Gmail / Email</label>'+
-    '<code>'+esc(email||'(sin email)')+'</code>'+
-    '<button class="w sec" id="btnCopyMail">Copiar email</button>'+
-    '</div>'+
-    '<p class="muted" style="margin-top:14px;font-size:12px">Si quieres ser creador, contacta al dueño del sitio con tu UID.</p>'+
-    '<button class="sec w" style="margin-top:16px" id="btnOut">Cerrar sesión</button>'+
-    '<p style="text-align:center;margin-top:12px"><a href="/" style="color:#A855F7;font-size:13px">← Volver a la web</a></p>';
-  $('btnCopyUid').onclick = function(){
-    if (navigator.clipboard) navigator.clipboard.writeText(uid).then(function(){ toast('UID copiado'); });
-    else toast(uid);
-  };
-  $('btnCopyMail').onclick = function(){
-    if (!email) return toast('Sin email', 1);
-    if (navigator.clipboard) navigator.clipboard.writeText(email).then(function(){ toast('Email copiado'); });
-    else toast(email);
-  };
-  $('btnOut').onclick = function(){ auth.signOut(); };
+function login(){auth.signInWithEmailAndPassword($('em').value.trim(),$('pw').value).catch(function(){toast('Correo o contraseña incorrectos',1)})}
+function google(){auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){toast(e.code||'Error',1)})}
+function viewDenied(u){
+  $('app').innerHTML='<h1>Sin acceso</h1><p class="muted" style="margin-top:10px">Tu cuenta no tiene permisos de administrador.</p><div class="card" style="margin-top:14px"><label>UID</label><code>'+esc(u.uid)+'</code><button class="w sec" onclick="navigator.clipboard.writeText(\''+esc(u.uid)+'\').then(function(){toast(\'UID copiado\')})">Copiar UID</button><label style="margin-top:10px">Gmail / Email</label><code>'+esc(u.email||'(sin email)')+'</code><button class="w sec" onclick="navigator.clipboard.writeText(\''+esc(u.email||'')+'\').then(function(){toast(\'Email copiado\')})">Copiar email</button></div><p class="muted" style="margin-top:12px;font-size:12px">Si quieres ser creador, contacta al dueño del sitio con tu UID.</p><button class="sec w" style="margin-top:14px" onclick="auth.signOut()">Cerrar sesión</button>';
 }
 
 function viewPanel(u){
-  var roleBadge = isCreator ? '<span class="badge creator">CREADOR</span>' : '<span class="badge">ADMIN</span>';
-  var creatorHTML = '';
-  if (isCreator) {
-    creatorHTML =
-      '<h2>Gestionar Admins</h2>'+
-      '<div class="card">'+
-      '<p class="muted" style="margin-bottom:10px">Solo el creador puede agregar o quitar admins. Usa el UID del usuario.</p>'+
-      '<label>UID del nuevo admin</label>'+
-      '<input id="adminUid" placeholder="UID del usuario">'+
-      '<button class="w" id="btnAddAdmin">Agregar admin</button>'+
-      '<div id="adminsList" style="margin-top:14px"></div>'+
-      '</div>';
-  }
+  var badge=isCreator?'<span class="badge cr">CREADOR</span>':'<span class="badge">ADMIN</span>';
+  var tabs='<div class="tabs">'+
+    '<button class="tab on" data-t="games" onclick="tab(\'games\')">Juegos</button>'+
+    '<button class="tab" data-t="site" onclick="tab(\'site\')">Sitio</button>'+
+    '<button class="tab" data-t="bans" onclick="tab(\'bans\')">Baneos</button>'+
+    '<button class="tab" data-t="chat" onclick="tab(\'chat\')">Chat</button>'+
+    '<button class="tab" data-t="stats" onclick="tab(\'stats\')">Stats</button>'+
+    '<button class="tab" data-t="users" onclick="tab(\'users\')">Usuarios</button>'+
+    (isCreator?'<button class="tab" data-t="admins" onclick="tab(\'admins\')">Admins</button>':'')+
+    '</div>';
 
-  $('app').innerHTML =
-    '<div class="row" style="justify-content:space-between;margin-bottom:8px">'+
-    '<div><h1>Panel Admin '+roleBadge+'</h1><p class="muted" style="font-size:12px">'+esc(u.email||'')+'</p></div>'+
-    '<div class="row"><a href="/" style="color:#A855F7;font-size:13px">Ver web</a><button class="sec" id="btnOut2">Salir</button></div>'+
-    '</div>'+
-    creatorHTML+
-    '<h2 id="ft">Nuevo juego</h2>'+
-    '<div class="card">'+
+  $('app').innerHTML=
+    '<div class="row" style="justify-content:space-between"><h1>Panel Admin '+badge+'</h1><div class="row"><a href="/" style="color:#A855F7;font-size:13px">Ver web</a><button class="sec" onclick="auth.signOut()">Salir</button></div></div>'+
+    '<p class="muted" style="font-size:12px;margin:4px 0 0">'+esc(u.email||'')+'</p>'+tabs+
+
+    /* GAMES */
+    '<div class="panel on" id="p-games">'+
+    '<h2 id="ft">Nuevo juego</h2><div class="card">'+
     '<label>Título *</label><input id="f_title">'+
-    '<div class="g"><div><label>Desarrollador</label><input id="f_dev"></div><div><label>Categoría</label><input id="f_cat" placeholder="Ej: Mods"></div></div>'+
+    '<div class="g"><div><label>Desarrollador</label><input id="f_dev"></div><div><label>Categoría</label><input id="f_cat" placeholder="Mods"></div></div>'+
     '<label>Imagen (https) *</label><input id="f_img" placeholder="https://...">'+
     '<label>Enlace APK *</label><input id="f_apk" placeholder="https://...">'+
     '<label>Descripción</label><textarea id="f_desc"></textarea>'+
     '<label>Novedades</label><textarea id="f_log"></textarea>'+
-    '<label>Seguridad de datos</label><input id="f_sec">'+
-    '<div class="g"><div><label>Tipo (ej: MOD APK)</label><input id="f_badge"></div><div><label>Etiqueta (ej: NUEVO)</label><input id="f_label"></div></div>'+
+    '<label>Seguridad</label><input id="f_sec">'+
+    '<div class="g"><div><label>Tipo (MOD APK)</label><input id="f_badge"></div><div><label>Etiqueta (NUEVO)</label><input id="f_label"></div></div>'+
     '<label>Color etiqueta</label><input id="f_color" value="#EF4444">'+
-    '<label>Capturas / YouTube (uno por línea)</label><textarea id="f_media"></textarea>'+
+    '<label>Media (un link por línea)</label><textarea id="f_media"></textarea>'+
     '<div class="row" style="margin-bottom:12px"><input type="checkbox" id="f_active" checked style="width:auto;margin:0"><label style="margin:0;font-size:13px;color:#f8fafc">Activo</label></div>'+
-    '<div class="row"><button class="w" id="btnSave">Guardar juego</button><button class="sec" id="btnClear">Limpiar</button></div>'+
-    '</div>'+
-    '<h2>Juegos</h2><div id="list"></div>';
+    '<div class="row"><button class="w" onclick="saveGame()">Guardar</button><button class="sec" onclick="resetGame()">Limpiar</button></div></div>'+
+    '<h2>Lista</h2><div id="list"></div></div>'+
 
-  $('btnOut2').onclick = function(){ auth.signOut(); };
-  $('btnSave').onclick = save;
-  $('btnClear').onclick = resetForm;
-  if (isCreator) {
-    $('btnAddAdmin').onclick = addAdmin;
-    loadAdmins();
-  }
+    /* SITE / MAINTENANCE */
+    '<div class="panel" id="p-site">'+
+    '<h2>Mantenimiento y sitio</h2><div class="card" id="siteCard"><p class="muted">Cargando…</p></div></div>'+
+
+    /* BANS */
+    '<div class="panel" id="p-bans">'+
+    '<h2>Sistema de ban</h2><div class="card">'+
+    '<label>UID a banear</label><input id="banUid" placeholder="UID del usuario">'+
+    '<label>Motivo</label><input id="banReason" placeholder="Spam, insultos, etc.">'+
+    '<button class="w dng" onclick="banUser()">Banear usuario</button>'+
+    '<p class="muted" style="margin-top:10px;font-size:12px">Un baneado no puede usar el chat ni publicar reseñas.</p></div>'+
+    '<h2>Baneados</h2><div id="banList"></div></div>'+
+
+    /* CHAT MOD */
+    '<div class="panel" id="p-chat">'+
+    '<h2>Moderar chat</h2><div class="card"><p class="muted" style="margin-bottom:10px">Últimos mensajes. Puedes borrar cualquiera.</p><div id="chatMod"></div></div></div>'+
+
+    /* STATS */
+    '<div class="panel" id="p-stats">'+
+    '<h2>Estadísticas</h2><div class="g" id="statsGrid" style="margin-bottom:12px"></div></div>'+
+
+    /* ADMINS (creator) */
+    '<div class="panel" id="p-users">'+
+    '<h2>Usuarios</h2>'+
+    '<div class="card"><input id="userSearch" placeholder="Buscar por nombre, email o UID" oninput="filterUsers()"><div id="usersList"><p class="muted">Cargando…</p></div></div></div>'+(isCreator?'<div class="panel" id="p-admins"><h2>Gestionar admins</h2><div class="card"><label>UID del nuevo admin</label><input id="adminUid" placeholder="UID"><button class="w" onclick="addAdmin()">Agregar admin</button><div id="adminsList" style="margin-top:14px"></div></div></div>':'');
+
   loadList();
+  loadSettings();
 }
 
+/* ===== SETTINGS / MAINTENANCE ===== */
+function loadSettings(){
+  db.collection('settings').doc('site').get().then(function(d){
+    settings=d.exists?d.data():{};
+    renderSettings();
+  }).catch(function(){settings={};renderSettings()});
+}
+function renderSettings(){
+  var s=settings||{};
+  var maint=!!s.maintenance;
+  var chatOff=!!s.chatDisabled;
+  var revOff=!!s.reviewsDisabled;
+  $('siteCard').innerHTML=
+    '<div class="switch"><div><b>Modo mantenimiento</b><div class="muted" style="font-size:12px">La web muestra aviso y limita el uso</div></div>'+
+    '<div class="sw '+(maint?'on':'')+'" id="swMaint" onclick="toggleSw(\'maintenance\')"><i></i></div></div>'+
+    '<label style="margin-top:12px">Mensaje de mantenimiento</label>'+
+    '<textarea id="maintMsg" placeholder="Estamos en mantenimiento. Vuelve pronto.">'+esc(s.maintenanceMessage||'')+'</textarea>'+
+    '<div class="switch"><div><b>Desactivar chat</b><div class="muted" style="font-size:12px">Nadie puede enviar mensajes</div></div>'+
+    '<div class="sw '+(chatOff?'on':'')+'" id="swChat" onclick="toggleSw(\'chatDisabled\')"><i></i></div></div>'+
+    '<div class="switch"><div><b>Desactivar reseñas</b><div class="muted" style="font-size:12px">Nadie puede publicar reseñas</div></div>'+
+    '<div class="sw '+(revOff?'on':'')+'" id="swRev" onclick="toggleSw(\'reviewsDisabled\')"><i></i></div></div>'+
+    '<label style="margin-top:12px">Anuncio global (banner)</label>'+
+    '<input id="announce" placeholder="Ej: Nuevo juego disponible" value="'+esc(s.announcement||'')+'">'+
+    '<label>Título del sitio</label>'+
+    '<input id="siteTitle" placeholder="Veltrix Games" value="'+esc(s.siteTitle||'')+'">'+
+    '<button class="w ok" style="margin-top:8px" onclick="saveSettings()">Guardar ajustes</button>';
+}
+function toggleSw(key){
+  settings[key]=!settings[key];
+  renderSettings();
+}
+function saveSettings(){
+  var data={
+    maintenance:!!settings.maintenance,
+    chatDisabled:!!settings.chatDisabled,
+    reviewsDisabled:!!settings.reviewsDisabled,
+    maintenanceMessage:($('maintMsg').value||'').trim()||'Estamos en mantenimiento. Vuelve pronto.',
+    announcement:($('announce').value||'').trim(),
+    siteTitle:($('siteTitle').value||'').trim()||'Veltrix Games',
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+    updatedBy:auth.currentUser.uid
+  };
+  db.collection('settings').doc('site').set(data,{merge:true}).then(function(){
+    settings=Object.assign(settings,data);
+    toast('Ajustes guardados');
+  }).catch(function(e){console.log(e);toast('Error al guardar',1)});
+}
+
+/* ===== BANS ===== */
+function banUser(){
+  var uid=$('banUid').value.trim();
+  var reason=($('banReason').value||'').trim()||'Sin motivo';
+  if(!uid||uid.length<8)return toast('UID inválido',1);
+  if(uid===auth.currentUser.uid)return toast('No puedes banearte a ti mismo',1);
+  db.collection('bans').doc(uid).set({
+    reason:reason,
+    bannedBy:auth.currentUser.uid,
+    bannedAt:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){toast('Usuario baneado');$('banUid').value='';$('banReason').value='';loadBans()})
+    .catch(function(e){console.log(e);toast('No se pudo banear',1)});
+}
+function unbanUser(uid){
+  if(!confirm('¿Quitar ban?'))return;
+  db.collection('bans').doc(uid).delete().then(function(){toast('Ban eliminado');loadBans()}).catch(function(){toast('Error',1)});
+}
+function loadBans(){
+  db.collection('bans').get().then(function(s){
+    var box=$('banList');if(!box)return;
+    if(!s.docs.length){box.innerHTML='<p class="muted">Nadie baneado.</p>';return}
+    box.innerHTML=s.docs.map(function(d){
+      var x=d.data();
+      return '<div class="card"><div class="row" style="justify-content:space-between"><div style="flex:1;min-width:0"><code style="margin:0">'+esc(d.id)+'</code><div class="muted" style="font-size:12px;margin-top:4px">'+esc(x.reason||'')+'</div></div><button class="ok" style="padding:8px 12px" onclick="unbanUser(\''+esc(d.id)+'\')">Quitar ban</button></div></div>';
+    }).join('');
+  }).catch(function(){$('banList').innerHTML='<p class="muted">Error cargando bans</p>'});
+}
+
+/* ===== CHAT MOD ===== */
+function loadChatMod(){
+  db.collection('chat').orderBy('createdAt','desc').limit(40).get().then(function(s){
+    var box=$('chatMod');if(!box)return;
+    if(!s.docs.length){box.innerHTML='<p class="muted">Sin mensajes</p>';return}
+    box.innerHTML=s.docs.map(function(d){
+      var m=d.data();
+      return '<div style="border-bottom:1px solid #1C1C24;padding:10px 0"><div class="row" style="justify-content:space-between"><b style="font-size:13px">'+esc(m.name||'?')+'</b><button class="dng" style="padding:6px 10px;font-size:11px" onclick="delChat(\''+esc(d.id)+'\')">Borrar</button></div><div class="muted" style="font-size:13px;margin-top:4px">'+esc(m.text||'')+'</div><div class="muted" style="font-size:10px;margin-top:2px">uid: '+esc(m.uid||'')+'</div></div>';
+    }).join('');
+  }).catch(function(e){$('chatMod').innerHTML='<p class="muted">Error: '+esc(e.message)+'</p>'});
+}
+function delChat(id){
+  if(!confirm('¿Borrar mensaje?'))return;
+  db.collection('chat').doc(id).delete().then(function(){toast('Borrado');loadChatMod()}).catch(function(){toast('Error',1)});
+}
+
+/* ===== STATS ===== */
+function loadStats(){
+  Promise.all([
+    db.collection('games').get(),
+    db.collection('reviews').get(),
+    db.collection('chat').get(),
+    db.collection('bans').get(),
+    db.collection('admins').get()
+  ]).then(function(arr){
+    var g=arr[0].size,r=arr[1].size,c=arr[2].size,b=arr[3].size,a=arr[4].size;
+    var active=arr[0].docs.filter(function(d){return d.data().is_active!==false}).length;
+    $('statsGrid').innerHTML=
+      '<div class="stat"><b>'+g+'</b><span>Juegos</span></div>'+
+      '<div class="stat"><b>'+active+'</b><span>Activos</span></div>'+
+      '<div class="stat"><b>'+r+'</b><span>Reseñas</span></div>'+
+      '<div class="stat"><b>'+c+'</b><span>Msgs chat</span></div>'+
+      '<div class="stat"><b>'+b+'</b><span>Baneados</span></div>'+
+      '<div class="stat"><b>'+a+'</b><span>Admins</span></div>';
+  }).catch(function(){$('statsGrid').innerHTML='<p class="muted">No se pudieron cargar stats</p>'});
+}
+
+/* ===== ADMINS ===== */
 function addAdmin(){
-  var uid = $('adminUid').value.trim();
-  if (!uid || uid.length < 8) return toast('UID inválido', 1);
-  db.collection('admins').doc(uid).set({
-    addedBy: auth.currentUser.uid,
-    addedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function(){
-    toast('Admin agregado');
-    $('adminUid').value = '';
-    loadAdmins();
-  }).catch(function(e){
-    console.error(e);
-    toast('No se pudo agregar: ' + (e.message||''), 1);
-  });
+  var uid=$('adminUid').value.trim();
+  if(!uid||uid.length<8)return toast('UID inválido',1);
+  db.collection('admins').doc(uid).set({addedBy:auth.currentUser.uid,addedAt:firebase.firestore.FieldValue.serverTimestamp()})
+    .then(function(){toast('Admin agregado');$('adminUid').value='';loadAdmins()}).catch(function(){toast('Error',1)});
 }
-
 function removeAdmin(uid){
-  if (!confirm('¿Quitar admin?')) return;
-  db.collection('admins').doc(uid).delete().then(function(){
-    toast('Admin eliminado');
-    loadAdmins();
-  }).catch(function(){ toast('No se pudo quitar', 1); });
+  if(!confirm('¿Quitar admin?'))return;
+  db.collection('admins').doc(uid).delete().then(function(){toast('Quitado');loadAdmins()}).catch(function(){toast('Error',1)});
 }
-
 function loadAdmins(){
   db.collection('admins').get().then(function(s){
-    var box = $('adminsList');
-    if (!box) return;
-    if (!s.docs.length) { box.innerHTML = '<p class="muted">Aún no hay admins.</p>'; return; }
-    box.innerHTML = s.docs.map(function(d){
-      return '<div class="row" style="justify-content:space-between;padding:8px 0;border-bottom:1px solid #1C1C24">'+
-        '<code style="margin:0;flex:1">'+esc(d.id)+'</code>'+
-        '<button class="dng" style="padding:8px 12px" data-uid="'+esc(d.id)+'">Quitar</button></div>';
-    }).join('');
-    box.querySelectorAll('button[data-uid]').forEach(function(btn){
-      btn.onclick = function(){ removeAdmin(btn.getAttribute('data-uid')); };
-    });
-  }).catch(function(){});
-}
-
-function resetForm(){
-  editId = null;
-  var ft = $('ft'); if (ft) ft.textContent = 'Nuevo juego';
-  ['f_title','f_dev','f_cat','f_img','f_apk','f_desc','f_log','f_sec','f_badge','f_label','f_media'].forEach(function(id){
-    var el = $(id); if (el) el.value = '';
+    var box=$('adminsList');if(!box)return;
+    box.innerHTML=s.docs.length?s.docs.map(function(d){return '<div class="row" style="justify-content:space-between;padding:8px 0;border-bottom:1px solid #1C1C24"><code style="margin:0;flex:1">'+esc(d.id)+'</code><button class="dng" style="padding:8px 12px" onclick="removeAdmin(\''+esc(d.id)+'\')">Quitar</button></div>'}).join(''):'<p class="muted">Sin admins aún.</p>';
   });
-  var c = $('f_color'); if (c) c.value = '#EF4444';
-  var a = $('f_active'); if (a) a.checked = true;
 }
 
-function save(){
-  var title = $('f_title').value.trim();
-  var img = $('f_img').value.trim();
-  var apk = $('f_apk').value.trim();
-  if (!title || !img || !apk) return toast('Título, imagen y APK obligatorios', 1);
-  var media = ($('f_media').value||'').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).map(function(url){
-    return { type: /youtu\.?be/.test(url) ? 'youtube' : 'image', url: url };
+
+/* ===== USERS ===== */
+var _usersCache=[];
+function loadUsers(){
+  Promise.all([
+    db.collection('users').get(),
+    db.collection('bans').get(),
+    db.collection('admins').get(),
+    db.collection('creators').get()
+  ]).then(function(arr){
+    var bans=new Set(arr[1].docs.map(function(d){return d.id}));
+    var admins=new Set(arr[2].docs.map(function(d){return d.id}));
+    var creators=new Set(arr[3].docs.map(function(d){return d.id}));
+    _usersCache=arr[0].docs.map(function(d){
+      var x=d.data();x.uid=d.id;x.banned=bans.has(d.id);x.isAdmin=admins.has(d.id);x.isCreator=creators.has(d.id);return x;
+    }).sort(function(a,b){return (a.name||'').localeCompare(b.name||'')});
+    filterUsers();
+  }).catch(function(e){
+    var box=$('usersList');if(box)box.innerHTML='<p class="muted">Error: '+esc(e.message)+'</p>';
   });
-  var data = {
-    title: title,
-    developer: $('f_dev').value.trim() || 'Veltrix',
-    category: $('f_cat').value.trim() || 'Otros',
-    img: img,
-    apk_url: apk,
-    desc_game: $('f_desc').value.trim(),
-    changelog: $('f_log').value.trim(),
-    security_info: $('f_sec').value.trim(),
-    badge_text: $('f_badge').value.trim(),
-    label_text: $('f_label').value.trim(),
-    label_color: $('f_color').value.trim() || '#EF4444',
-    media: media,
-    is_active: $('f_active').checked
-  };
-  var id = editId || db.collection('games').doc().id;
-  var p = editId ? Promise.resolve() : db.collection('games').doc(id).set({ createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-  p.then(function(){ return db.collection('games').doc(id).set(data, { merge: true }); })
-    .then(function(){ toast('Juego guardado'); resetForm(); loadList(); })
-    .catch(function(e){ console.error(e); toast('Error al guardar: '+(e.message||''), 1); });
+}
+function filterUsers(){
+  var q=(($('userSearch')&&$('userSearch').value)||'').trim().toLowerCase();
+  var list=_usersCache.filter(function(u){
+    if(!q)return true;
+    return (u.name||'').toLowerCase().indexOf(q)>=0||(u.email||'').toLowerCase().indexOf(q)>=0||(u.uid||'').toLowerCase().indexOf(q)>=0;
+  });
+  var box=$('usersList');if(!box)return;
+  if(!list.length){box.innerHTML='<p class="muted">No hay usuarios'+(q?' con ese filtro':'')+'.</p>';return}
+  box.innerHTML=list.map(function(u){
+    var tags='';
+    if(u.isCreator)tags+='<span class="badge cr">CREADOR</span> ';
+    else if(u.isAdmin)tags+='<span class="badge">ADMIN</span> ';
+    if(u.banned)tags+='<span class="badge off">BAN</span> ';
+    var actions='';
+    if(!u.isCreator){
+      if(u.banned)actions+='<button class="ok" style="padding:8px 10px;font-size:11px" onclick="unbanUser(\''+esc(u.uid)+'\');setTimeout(loadUsers,500)">Quitar ban</button>';
+      else actions+='<button class="dng" style="padding:8px 10px;font-size:11px" onclick="banFromUsers(\''+esc(u.uid)+'\')">Banear</button>';
+      if(isCreator&&!u.isAdmin)actions+='<button class="sec" style="padding:8px 10px;font-size:11px" onclick="makeAdminFromUsers(\''+esc(u.uid)+'\')">Hacer admin</button>';
+      if(isCreator&&u.isAdmin)actions+='<button class="sec" style="padding:8px 10px;font-size:11px" onclick="removeAdmin(\''+esc(u.uid)+'\');setTimeout(loadUsers,500)">Quitar admin</button>';
+    }
+    return '<div class="card" style="padding:12px"><div><b style="font-size:14px">'+esc(u.name||'Sin nombre')+'</b> '+tags+
+      '<div class="muted" style="font-size:12px;margin-top:2px">'+esc(u.email||'sin email')+'</div>'+
+      '<code style="margin:6px 0 0;font-size:10px">'+esc(u.uid)+'</code>'+
+      (u.bio?'<div class="muted" style="font-size:12px;margin-top:4px">'+esc(u.bio)+'</div>':'')+
+      '</div>'+(actions?'<div class="row" style="margin-top:10px">'+actions+'</div>':'')+'</div>';
+  }).join('');
+}
+function banFromUsers(uid){
+  var reason=prompt('Motivo del ban:','Spam')||'Sin motivo';
+  db.collection('bans').doc(uid).set({reason:reason,bannedBy:auth.currentUser.uid,bannedAt:firebase.firestore.FieldValue.serverTimestamp()})
+    .then(function(){toast('Usuario baneado');loadUsers()}).catch(function(){toast('Error',1)});
+}
+function makeAdminFromUsers(uid){
+  if(!isCreator)return;
+  db.collection('admins').doc(uid).set({addedBy:auth.currentUser.uid,addedAt:firebase.firestore.FieldValue.serverTimestamp()})
+    .then(function(){toast('Ahora es admin');loadUsers()}).catch(function(){toast('Error',1)});
 }
 
+/* ===== GAMES ===== */
+function resetGame(){
+  editId=null;var ft=$('ft');if(ft)ft.textContent='Nuevo juego';
+  ['f_title','f_dev','f_cat','f_img','f_apk','f_desc','f_log','f_sec','f_badge','f_label','f_media'].forEach(function(id){var el=$(id);if(el)el.value=''});
+  if($('f_color'))$('f_color').value='#EF4444';if($('f_active'))$('f_active').checked=true;
+}
+function saveGame(){
+  var title=$('f_title').value.trim(),img=$('f_img').value.trim(),apk=$('f_apk').value.trim();
+  if(!title||!img||!apk)return toast('Título, imagen y APK obligatorios',1);
+  var media=($('f_media').value||'').split('\n').map(function(l){return l.trim()}).filter(Boolean).map(function(url){return{type:/youtu\.?be/.test(url)?'youtube':'image',url:url}});
+  var data={title:title,developer:$('f_dev').value.trim()||'Veltrix',category:$('f_cat').value.trim()||'Otros',img:img,apk_url:apk,desc_game:$('f_desc').value.trim(),changelog:$('f_log').value.trim(),security_info:$('f_sec').value.trim(),badge_text:$('f_badge').value.trim(),label_text:$('f_label').value.trim(),label_color:$('f_color').value.trim()||'#EF4444',media:media,is_active:$('f_active').checked};
+  var id=editId||db.collection('games').doc().id;
+  var p=editId?Promise.resolve():db.collection('games').doc(id).set({createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  p.then(function(){return db.collection('games').doc(id).set(data,{merge:true})}).then(function(){toast('Juego guardado');resetGame();loadList()}).catch(function(e){console.log(e);toast('Error al guardar',1)});
+}
 function loadList(){
   db.collection('games').get().then(function(s){
-    var l = s.docs.map(function(d){ var x = d.data(); x.id = d.id; return x; })
-      .sort(function(a,b){ return (b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0) - (a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0); });
-    window._l = l;
-    var list = $('list');
-    if (!list) return;
-    list.innerHTML = l.length ? l.map(function(g){
-      return '<div class="card"><div class="item"><img src="'+esc(g.img)+'" alt=""><div style="flex:1;min-width:0"><b>'+esc(g.title)+'</b><small>'+esc(g.category||'')+' · '+(g.is_active===false?'Oculto':'Visible')+'</small></div></div>'+
-        '<div class="row">'+
-        '<button class="sec" data-act="edit" data-id="'+esc(g.id)+'">Editar</button>'+
-        '<button class="sec" data-act="toggle" data-id="'+esc(g.id)+'">'+(g.is_active===false?'Mostrar':'Ocultar')+'</button>'+
-        '<button class="dng" data-act="del" data-id="'+esc(g.id)+'">Eliminar</button></div></div>';
-    }).join('') : '<p class="muted">Aún no hay juegos.</p>';
-    list.querySelectorAll('button[data-act]').forEach(function(btn){
-      var act = btn.getAttribute('data-act'), id = btn.getAttribute('data-id');
-      btn.onclick = function(){
-        if (act === 'edit') edit(id);
-        else if (act === 'toggle') toggle(id);
-        else if (act === 'del') del(id);
-      };
-    });
-  }).catch(function(e){
-    var list = $('list');
-    if (list) list.innerHTML = '<p class="muted">No se pudo cargar: '+esc(e.message||'')+'</p>';
-  });
+    var l=s.docs.map(function(d){var x=d.data();x.id=d.id;return x}).sort(function(a,b){return(b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0)-(a.createdAt&&a.createdAt.toMillis?a.createdAt.toMillis():0)});
+    window._l=l;
+    var box=$('list');if(!box)return;
+    box.innerHTML=l.length?l.map(function(g){return'<div class="card"><div class="item"><img src="'+esc(g.img)+'" alt=""><div style="flex:1;min-width:0"><b>'+esc(g.title)+'</b><small>'+esc(g.category||'')+' · '+(g.is_active===false?'Oculto':'Visible')+'</small></div></div><div class="row"><button class="sec" onclick="editGame(\''+esc(g.id)+'\')">Editar</button><button class="sec" onclick="toggleGame(\''+esc(g.id)+'\')">'+(g.is_active===false?'Mostrar':'Ocultar')+'</button><button class="dng" onclick="delGame(\''+esc(g.id)+'\')">Eliminar</button></div></div>'}).join(''):'<p class="muted">Sin juegos aún.</p>';
+  }).catch(function(){var b=$('list');if(b)b.textContent='Error cargando juegos'});
 }
-
-function edit(id){
-  var g = (window._l||[]).filter(function(x){ return x.id === id; })[0];
-  if (!g) return;
-  editId = id;
-  $('ft').textContent = 'Editando: ' + g.title;
-  $('f_title').value = g.title || '';
-  $('f_dev').value = g.developer || '';
-  $('f_cat').value = g.category || '';
-  $('f_img').value = g.img || '';
-  $('f_apk').value = g.apk_url || '';
-  $('f_desc').value = g.desc_game || '';
-  $('f_log').value = g.changelog || '';
-  $('f_sec').value = g.security_info || '';
-  $('f_badge').value = g.badge_text || '';
-  $('f_label').value = g.label_text || '';
-  $('f_color').value = g.label_color || '#EF4444';
-  $('f_media').value = (g.media||[]).map(function(m){ return m.url; }).join('\n');
-  $('f_active').checked = g.is_active !== false;
-  window.scrollTo(0,0);
+function editGame(id){
+  var g=(window._l||[]).filter(function(x){return x.id===id})[0];if(!g)return;
+  editId=id;$('ft').textContent='Editando: '+g.title;
+  $('f_title').value=g.title||'';$('f_dev').value=g.developer||'';$('f_cat').value=g.category||'';$('f_img').value=g.img||'';$('f_apk').value=g.apk_url||'';$('f_desc').value=g.desc_game||'';$('f_log').value=g.changelog||'';$('f_sec').value=g.security_info||'';$('f_badge').value=g.badge_text||'';$('f_label').value=g.label_text||'';$('f_color').value=g.label_color||'#EF4444';$('f_media').value=(g.media||[]).map(function(m){return m.url}).join('\n');$('f_active').checked=g.is_active!==false;window.scrollTo(0,0);
 }
-
-function toggle(id){
-  var g = (window._l||[]).filter(function(x){ return x.id === id; })[0];
-  if (!g) return;
-  db.collection('games').doc(id).update({ is_active: g.is_active === false }).then(loadList).catch(function(){ toast('No se pudo cambiar', 1); });
-}
-
-function del(id){
-  if (!confirm('¿Eliminar este juego?')) return;
-  db.collection('games').doc(id).delete().then(function(){ toast('Eliminado'); loadList(); }).catch(function(){ toast('No se pudo eliminar', 1); });
-}
-</script>
-</body>
-</html>
+function toggleGame(id){var g=(window._l||[]).filter(function(x){return x.id===id})[0];if(!g)return;db.collection('games').doc(id).update({is_active:g.is_active===false}).then(loadList).catch(function(){toast('Error',1)})}
+function delGame(id){if(!confirm('¿Eliminar juego?'))return;db.collection('games').doc(id).delete().then(function(){toast('Eliminado');loadList()}).catch(function(){toast('Error',1)})}
+</script></body></html>
