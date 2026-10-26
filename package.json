@@ -2,5 +2,7 @@
   "name": "veltrix-games",
   "version": "1.0.0",
   "private": true,
-  "engines": { "node": "20.x" }
+  "engines": {
+    "node": "24.x"
+  }
 }
