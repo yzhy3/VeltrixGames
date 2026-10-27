@@ -48,7 +48,7 @@ var auth,db,editId=null,isCreator=false,isAdmin=false,settings={};
 function $(id){return document.getElementById(id)}
 function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function toast(m,e){var t=$('toast');t.textContent=m;t.className=e?'e s':'s';setTimeout(function(){t.className=''},2800)}
-function tab(name){document.querySelectorAll('.tab').forEach(function(el){el.classList.toggle('on',el.dataset.t===name)});document.querySelectorAll('.panel').forEach(function(el){el.classList.toggle('on',el.id==='p-'+name)});if(name==='bans')loadBans();if(name==='chat')loadChatMod();if(name==='stats')loadStats();if(name==='users')loadUsers();if(name==='admins'&&isCreator)loadAdmins()}
+function tab(name){document.querySelectorAll('.tab').forEach(function(el){el.classList.toggle('on',el.dataset.t===name)});document.querySelectorAll('.panel').forEach(function(el){el.classList.toggle('on',el.id==='p-'+name)});if(name==='bans')loadBans();if(name==='reports')loadReports();if(name==='chat')loadChatMod();if(name==='stats')loadStats();if(name==='users')loadUsers();if(name==='admins'&&isCreator)loadAdmins()}
 
 firebase.initializeApp(CFG);auth=firebase.auth();db=firebase.firestore();var storage=null;try{storage=firebase.storage()}catch(e){}
 auth.onAuthStateChanged(function(u){
@@ -72,7 +72,7 @@ function viewPanel(u){
   var tabs='<div class="tabs">'+
     '<button class="tab on" data-t="games" onclick="tab(\'games\')">Juegos</button>'+
     '<button class="tab" data-t="site" onclick="tab(\'site\')">Sitio</button>'+
-    '<button class="tab" data-t="bans" onclick="tab(\'bans\')">Baneos</button>'+
+    '<button class="tab" data-t="bans" onclick="tab(\'bans\')">Baneos</button>'+'<button class="tab" data-t="reports" onclick="tab(\'reports\')">Reportes</button>'+
     '<button class="tab" data-t="chat" onclick="tab(\'chat\')">Chat</button>'+
     '<button class="tab" data-t="stats" onclick="tab(\'stats\')">Stats</button>'+
     '<button class="tab" data-t="users" onclick="tab(\'users\')">Usuarios</button>'+
@@ -105,7 +105,7 @@ function viewPanel(u){
     '<h2>Mantenimiento y sitio</h2><div class="card" id="siteCard"><p class="muted">Cargando…</p></div></div>'+
 
     /* BANS */
-    '<div class="panel" id="p-bans">'+
+    '<div class="panel" id="p-reports"><h2>Reportes</h2><div id="reportsList"><p class="muted">Cargando…</p></div></div>'+'<div class="panel" id="p-bans">'+
     '<h2>Sistema de ban</h2><div class="card">'+
     '<label>UID a banear</label><input id="banUid" placeholder="UID del usuario">'+
     '<label>Motivo</label><input id="banReason" placeholder="Spam, insultos, etc.">'+
@@ -196,6 +196,31 @@ function banUser(){
 function unbanUser(uid){
   if(!confirm('¿Quitar ban?'))return;
   db.collection('bans').doc(uid).delete().then(function(){toast('Ban eliminado');loadBans()}).catch(function(){toast('Error',1)});
+}
+function loadReports(){
+  db.collection('reports').orderBy('createdAt','desc').limit(50).get().then(function(s){
+    var box=$('reportsList');if(!box)return;
+    if(!s.docs.length){box.innerHTML='<p class="muted">Sin reportes.</p>';return}
+    box.innerHTML=s.docs.map(function(d){
+      var x=d.data();
+      var when=x.createdAt&&x.createdAt.toDate?x.createdAt.toDate().toLocaleString():'';
+      return '<div class="card"><div class="row" style="justify-content:space-between"><b style="font-size:13px">'+(x.type||'?').toUpperCase()+'</b><span class="muted" style="font-size:11px">'+esc(when)+'</span></div>'+
+        '<div class="muted" style="margin-top:6px;font-size:12px">Por: '+esc(x.name||'')+' · '+esc(x.uid||'')+'</div>'+
+        '<div style="margin-top:6px;font-size:13px"><b>Motivo:</b> '+esc(x.reason||'')+'</div>'+
+        (x.game_title?'<div class="muted" style="font-size:12px;margin-top:4px">Juego: '+esc(x.game_title)+' ('+esc(x.game_id||'')+')</div>':'')+
+        (x.msg_text?'<div class="muted" style="font-size:12px;margin-top:4px">Msg: '+esc(x.msg_text)+'</div>':'')+
+        '<div class="row" style="margin-top:10px"><button class="ok" style="padding:8px 12px;font-size:11px" onclick="closeReport(\''+esc(d.id)+'\')">Cerrar</button>'+
+        (x.msg_id?'<button class="dng" style="padding:8px 12px;font-size:11px" onclick="delChat(\''+esc(x.msg_id)+'\')">Borrar msg</button>':'')+
+        (x.msg_uid?'<button class="dng" style="padding:8px 12px;font-size:11px" onclick="banFromUsers(\''+esc(x.msg_uid)+'\')">Banear autor</button>':'')+
+        '</div></div>';
+    }).join('');
+  }).catch(function(e){
+    var box=$('reportsList');
+    if(box)box.innerHTML='<p class="muted">Error: '+esc(e.message)+'. Puede faltar índice en Firestore.</p>';
+  });
+}
+function closeReport(id){
+  db.collection('reports').doc(id).update({status:'closed'}).then(function(){toast('Cerrado');loadReports()}).catch(function(){toast('Error',1)});
 }
 function loadBans(){
   db.collection('bans').get().then(function(s){

@@ -114,7 +114,8 @@ nav.bnav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:var(--nav-
 <nav class="flex-col" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
 <a href="#" onclick="showPage('home');toggleSidebar();return false" data-nav="home" class="sb-item active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Inicio</a>
 <a href="#" onclick="showPage('chat');toggleSidebar();return false" data-nav="chat" class="sb-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chat Global</a>
-<a href="#" onclick="showPage('friends');toggleSidebar();return false" data-nav="friends" class="sb-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Amigos</a>
+<a href="#" onclick="showPage('dmlist');toggleSidebar();return false" data-nav="dmlist" class="sb-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Mensajes</a>
+<a href="#" onclick="showPage('rank');toggleSidebar();return false" data-nav="rank" class="sb-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg> Ranking</a>
 <a href="#" onclick="showPage('profile');toggleSidebar();return false" data-nav="profile" class="sb-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Mi Perfil</a>
 <a href="#" onclick="showPage('about');toggleSidebar();return false" data-nav="about" class="sb-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Acerca de</a>
 </nav>
@@ -169,20 +170,28 @@ nav.bnav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:var(--nav-
 <button id="chatSend" class="btn-main" style="width:auto;padding:0 18px;" onclick="event.stopPropagation();sendChat()">Enviar</button>
 </div></div></div>
 
-<div id="page-friends" class="page hidden">
+
+<div id="page-rank" class="page hidden">
   <div style="margin-top:16px;">
-    <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <button class="btn-main" id="ftabFriends" style="flex:1;padding:10px;font-size:12px;" onclick="friendsTab('list')">Amigos</button>
-      <button class="btn-main" id="ftabReq" style="flex:1;padding:10px;font-size:12px;background:var(--card-bg);color:var(--text-main);border:1px solid var(--border-color);" onclick="friendsTab('req')">Solicitudes <span id="reqBadge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;">0</span></button>
-      <button class="btn-main" id="ftabSearch" style="flex:1;padding:10px;font-size:12px;background:var(--card-bg);color:var(--text-main);border:1px solid var(--border-color);" onclick="friendsTab('search')">Buscar</button>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="btn-main" id="rankTabDl" style="flex:1;padding:10px;font-size:12px;" onclick="renderRanking('downloads')">Más descargados</button>
+      <button class="btn-main" id="rankTabRt" style="flex:1;padding:10px;font-size:12px;background:var(--card-bg);color:var(--text-main);border:1px solid var(--border-color);" onclick="renderRanking('rating')">Mejor valorados</button>
     </div>
-    <div id="friendsPanel"></div>
+    <div id="rankList"></div>
+  </div>
+</div>
+
+<div id="page-dmlist" class="page hidden">
+  <div style="margin-top:16px;">
+    <h2 style="font-size:18px;font-weight:900;margin-bottom:12px;">Mensajes privados</h2>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Escribe a alguien desde su perfil o desde el chat (mantener pulsado → Mensaje privado).</p>
+    <div id="dmListBox"><p style="text-align:center;color:var(--text-muted);font-size:13px;">Cargando…</p></div>
   </div>
 </div>
 <div id="page-dm" class="page hidden">
   <div style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:16px;overflow:hidden;height:calc(100vh - 190px);height:calc(100dvh - 190px);margin-top:16px;display:flex;flex-direction:column;">
     <div style="padding:12px 16px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:10px;">
-      <button onclick="showPage('friends')" style="background:none;border:none;color:var(--accent);font-weight:700;cursor:pointer;font-size:13px;">←</button>
+      <button onclick="showPage('dmlist')" style="background:none;border:none;color:var(--accent);font-weight:700;cursor:pointer;font-size:13px;">←</button>
       <div id="dmTitle" style="font-weight:800;font-size:14px;flex:1;">Chat privado</div>
     </div>
     <div id="dmMsgs" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 0;"></div>
@@ -218,6 +227,7 @@ nav.bnav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:var(--nav-
 </div>
 <div style="display:flex;gap:12px;margin-bottom:20px;">
 <a id="dDownload" href="#" onclick="logDownload(event)" target="_blank" rel="noopener noreferrer" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:12px;background:var(--accent);color:#fff;font-weight:900;font-size:15px;text-decoration:none;"><svg style="width:20px;height:20px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> INSTALAR</a>
+<button type="button" id="reportGameBtn" onclick="reportGame()" style="padding:14px 12px;border-radius:12px;background:var(--card-bg);border:1px solid var(--border-color);color:var(--text-muted);font-weight:700;font-size:12px;cursor:pointer;">Reportar</button>
 <button onclick="shareGame()" style="width:52px;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid var(--border-color);background:var(--card-bg);color:var(--text-main);cursor:pointer;"><svg style="width:20px;height:20px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
 </div>
 <div id="dMedia" style="display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:20px;padding-bottom:8px;scroll-snap-type:x mandatory;"></div>
@@ -344,10 +354,10 @@ function openLightbox(url){document.getElementById('lightboxImg').src=url;docume
 function closeLightbox(){document.getElementById('lightbox').style.display='none'}
 function closeWelcome(){document.getElementById('welcomeModal').style.display='none'}
 window.addEventListener('scroll',function(){let b=document.getElementById('backToTop');if(window.scrollY>300)b.classList.add('show');else b.classList.remove('show')});
-document.addEventListener('DOMContentLoaded',()=>{var urlParams=new URLSearchParams(window.location.search);var redirectPath=urlParams.get('redirect');if(redirectPath){window.history.replaceState({},'',redirectPath)}var currentPath=window.location.pathname;var currentSearch=new URLSearchParams(window.location.search);var isGamePage=currentSearch.has('id')||currentPath.startsWith('/game/');var validPages=['/search','/chat','/profile','/request','/about'];if(isGamePage){document.getElementById('globalLoader').style.display='flex';document.querySelectorAll('.page').forEach(el=>el.classList.add('hidden'));initHome().then(()=>{let id=currentSearch.get('id')||currentPath.split('/')[2];openDetail(id).then(()=>{document.getElementById('globalLoader').style.display='none'})})}else if(validPages.includes(currentPath)){initHome().then(()=>{showPage(currentPath.replace('/',''))})}else{initHome()}});
+document.addEventListener('DOMContentLoaded',()=>{var urlParams=new URLSearchParams(window.location.search);var redirectPath=urlParams.get('redirect');if(redirectPath){window.history.replaceState({},'',redirectPath)}var currentPath=window.location.pathname;var currentSearch=new URLSearchParams(window.location.search);var isGamePage=currentSearch.has('id')||currentPath.startsWith('/game/');var validPages=['/search','/chat','/profile','/request','/about','/rank','/dmlist','/dm'];if(isGamePage){document.getElementById('globalLoader').style.display='flex';document.querySelectorAll('.page').forEach(el=>el.classList.add('hidden'));initHome().then(()=>{let id=currentSearch.get('id')||currentPath.split('/')[2];openDetail(id).then(()=>{document.getElementById('globalLoader').style.display='none'})})}else if(validPages.includes(currentPath)){initHome().then(()=>{showPage(currentPath.replace('/',''))})}else{initHome()}});
 document.addEventListener('contextmenu',e=>e.preventDefault());document.onkeydown=function(e){if(e.keyCode==123||(e.ctrlKey&&e.shiftKey&&e.keyCode==73)||(e.ctrlKey&&e.shiftKey&&e.keyCode==74)||(e.ctrlKey&&e.keyCode==85)||(e.ctrlKey&&e.keyCode==67))return!1};document.addEventListener('dragstart',function(e){if(e.target.nodeName.toUpperCase()=="IMG")e.preventDefault()});
 
-function showPage(p){_showPageBase(p);if(p==='chat')startChat();else stopChat();if(p==='profile')renderProfile();if(p==='friends')renderFriendsPage();if(p==='dm'){/* dm already open */}}
+function showPage(p){_showPageBase(p);if(p==='chat')startChat();else stopChat();if(p==='profile')renderProfile();if(p==='rank')renderRanking('downloads');if(p==='dmlist')loadDMList()}
 let fbReady=false,auth=null,db=null,storage=null,currentUser=null,myProfile=null,adminSet=new Set(),chatUnsub=null,chatNotifyUnsub=null,authMode='login',lastSend=0,chatFirst=true,userCache={},lastChatSeen=0,_lastChatList=[];
 const USER_ICON='<svg style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
 function starSvg(sz){return'<svg style="width:'+sz+'px;height:'+sz+'px;" fill="currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'}
@@ -402,7 +412,7 @@ async function checkBan(u){try{let d=await db.collection('bans').doc(u.uid).get(
 async function ensureProfile(u){let ref=db.collection('users').doc(u.uid),s=await ref.get();if(s.exists){myProfile=s.data()}else{let nm=(u.displayName||(u.email||'Usuario').split('@')[0]).slice(0,30);if(nm.length<2)nm='Usuario';myProfile={name:nm,bio:'',photoURL:u.photoURL||'',verified:false};await ref.set(Object.assign({},myProfile,{createdAt:firebase.firestore.FieldValue.serverTimestamp()}))}}
 function updateAuthUI(){let b=document.getElementById('hdrUser');if(b)b.innerHTML=currentUser?avatarHTML(myProfile&&myProfile.name||'U',myProfile&&myProfile.photoURL,28):USER_ICON}
 function userBtn(){if(!fbReady){showToast('Falta configurar Firebase',true);return}currentUser?showPage('profile'):openAuth()}
-if(fbReady){loadAdmins();loadSiteSettings();initChatNotify();auth.onAuthStateChanged(async u=>{currentUser=u;myProfile=null;userBanned=false;if(u){try{await ensureProfile(u);await checkBan(u);listenFriendRequests();if(localStorage.getItem('notifOk')==='1'&&Notification.permission==='granted')notifEnabled=true}catch(e){console.log(e)}}else{if(reqUnsub){reqUnsub();reqUnsub=null}}updateAuthUI();updateChatInput();if(document.getElementById('page-profile').classList.contains('active'))renderProfile();if(curGame&&document.getElementById('page-detail').classList.contains('active'))loadReviews(curGame.game_id)})}
+if(fbReady){loadAdmins();loadSiteSettings();initChatNotify();auth.onAuthStateChanged(async u=>{currentUser=u;myProfile=null;userBanned=false;if(u){try{await ensureProfile(u);await checkBan(u)}catch(e){console.log(e)}}updateAuthUI();updateChatInput();if(document.getElementById('page-profile').classList.contains('active'))renderProfile();if(curGame&&document.getElementById('page-detail').classList.contains('active'))loadReviews(curGame.game_id)})}
 function openAuth(){if(!fbReady){showToast('Falta configurar Firebase (firebase-config.js)',true);return}document.getElementById('authModal').style.display='flex';setAuthMode('login')}
 function closeAuth(){document.getElementById('authModal').style.display='none';document.getElementById('authErr').innerText=''}
 function authErr(m){document.getElementById('authErr').innerText=m}
@@ -447,7 +457,8 @@ async function viewUserProfile(uid){
         <button class="btn-main" style="background:#1C1C24;font-size:12px;" onclick="navigator.clipboard.writeText('${escapeHTML(uid)}').then(()=>showToast('UID copiado'))">Copiar UID</button>
         ${!creatorSet.has(uid)?(banned?`<button class="btn-main" style="background:#10b981;font-size:12px;" onclick="adminUnbanFromProfile('${escapeHTML(uid)}')">Quitar ban</button>`:`<button class="btn-main" style="background:var(--danger);font-size:12px;" onclick="adminBanFromProfile('${escapeHTML(uid)}')">Banear</button>`):''}
       </div>`:''}
-      ${(currentUser&&uid!==currentUser.uid)?`<button class="btn-main" style="margin-top:12px;" onclick="sendFriendRequest('${escapeHTML(uid)}','${escapeHTML(name)}');">Agregar amigo</button><button class="btn-main" style="margin-top:8px;background:#1C1C24;" onclick="closeViewProfile();openDM('${escapeHTML(uid)}')">Mensaje privado</button>`:''}
+      
+      ${(currentUser&&uid!==currentUser.uid)?`<button class="btn-main" style="margin-top:12px;" onclick="openDM('${escapeHTML(uid)}')">Mensaje privado</button>`:''}
       <button class="btn-main" style="margin-top:12px;background:transparent;border:1px solid var(--border-color);color:var(--text-main);" onclick="closeViewProfile()">Cerrar</button>`;
   }catch(e){
     console.log(e);
@@ -462,7 +473,7 @@ async function adminUnbanFromProfile(uid){
   try{await db.collection('bans').doc(uid).delete();showToast('Ban eliminado');viewUserProfile(uid)}catch(e){showToast('Error',true)}
 }
 
-async function renderProfile(){let c=document.getElementById('profileBox');if(!fbReady){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;">Firebase no está configurado.</p>';return}if(!currentUser){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:12px;">Inicia sesión para ver tu perfil.</p><button class="btn-main" onclick="openAuth()">Iniciar sesión</button>';return}let p=myProfile||{};c.innerHTML=`<div style="display:flex;justify-content:center;margin-bottom:8px;">${avatarHTML(p.name,p.photoURL,84)}</div><div style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:16px;">${escapeHTML(currentUser.email||'')}${(p.verified||isCreator())?verifiedBadge(16):''}${isCreator()?' <span class="badge-admin" style="background:#eab308;color:#000">CREADOR</span>':(isAdmin()?' <span class="badge-admin">ADMIN</span>':'')}<br>Reseñas escritas: <b id="pRevCount">0</b></div><input class="fld" id="pName" placeholder="Nombre" maxlength="30" value="${escapeHTML(p.name||'')}"><input class="fld" id="pPhoto" placeholder="Foto (enlace https://...)" value="${escapeHTML(p.photoURL||'')}"><textarea class="fld" id="pBio" placeholder="Sobre ti (máx. 160)" maxlength="160" style="min-height:70px;">${escapeHTML(p.bio||'')}</textarea><button class="btn-main" onclick="saveProfile()">Guardar perfil</button>${isAdmin()?'<a href="/admin/" class="btn-main" style="display:block;text-align:center;text-decoration:none;margin-top:8px;background:'+(isCreator()?'#eab308;color:#000':'#3B82F6')+';">'+(isCreator()?'Panel Creador':'Panel Admin')+'</a>':''}<button class="btn-main" style="margin-top:8px;background:#1C1C24;" onclick="requestNotifPermission()">Activar notificaciones</button><button class="btn-main" style="margin-top:8px;background:#1C1C24;" onclick="showPage('friends')">Amigos y solicitudes</button><button class="btn-main" style="background:transparent;border:1px solid var(--border-color);color:var(--text-main);margin-top:8px;" onclick="logout()">Cerrar sesión</button>`;try{let r=await db.collection('reviews').where('uid','==',currentUser.uid).get();let e=document.getElementById('pRevCount');if(e)e.innerText=r.size}catch(e){}}
+async function renderProfile(){let c=document.getElementById('profileBox');if(!fbReady){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;">Firebase no está configurado.</p>';return}if(!currentUser){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:12px;">Inicia sesión para ver tu perfil.</p><button class="btn-main" onclick="openAuth()">Iniciar sesión</button>';return}let p=myProfile||{};c.innerHTML=`<div style="display:flex;justify-content:center;margin-bottom:8px;">${avatarHTML(p.name,p.photoURL,84)}</div><div style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:16px;">${escapeHTML(currentUser.email||'')}${(p.verified||isCreator())?verifiedBadge(16):''}${isCreator()?' <span class="badge-admin" style="background:#eab308;color:#000">CREADOR</span>':(isAdmin()?' <span class="badge-admin">ADMIN</span>':'')}<br>Reseñas escritas: <b id="pRevCount">0</b></div><input class="fld" id="pName" placeholder="Nombre" maxlength="30" value="${escapeHTML(p.name||'')}"><input class="fld" id="pPhoto" placeholder="Foto (enlace https://...)" value="${escapeHTML(p.photoURL||'')}"><textarea class="fld" id="pBio" placeholder="Sobre ti (máx. 160)" maxlength="160" style="min-height:70px;">${escapeHTML(p.bio||'')}</textarea><button class="btn-main" onclick="saveProfile()">Guardar perfil</button>${isAdmin()?'<a href="/admin/" class="btn-main" style="display:block;text-align:center;text-decoration:none;margin-top:8px;background:'+(isCreator()?'#eab308;color:#000':'#3B82F6')+';">'+(isCreator()?'Panel Creador':'Panel Admin')+'</a>':''}<button class="btn-main" style="background:transparent;border:1px solid var(--border-color);color:var(--text-main);margin-top:8px;" onclick="logout()">Cerrar sesión</button>`;try{let r=await db.collection('reviews').where('uid','==',currentUser.uid).get();let e=document.getElementById('pRevCount');if(e)e.innerText=r.size}catch(e){}}
 async function saveProfile(){let name=document.getElementById('pName').value.trim(),photo=document.getElementById('pPhoto').value.trim(),bio=document.getElementById('pBio').value.trim();if(name.length<2||name.length>30){showToast('El nombre debe tener entre 2 y 30 letras.',true);return}if(photo&&!/^https:\/\//.test(photo)){showToast('La foto debe ser un enlace https.',true);return}try{await db.collection('users').doc(currentUser.uid).set({name:name,photoURL:photo,bio:bio.slice(0,160)},{merge:true});myProfile=Object.assign({},myProfile,{name:name,photoURL:photo,bio:bio});userCache[currentUser.uid]=Object.assign({},userCache[currentUser.uid]||{},{name:name,photoURL:photo,bio:bio});updateAuthUI();renderProfile();if(typeof _lastChatList!=='undefined'&&_lastChatList.length)renderChat(_lastChatList);showToast('Perfil guardado')}catch(e){console.log(e);showToast('No se pudo guardar el perfil',true)}}
 
 
@@ -473,16 +484,16 @@ function updateChatInput(){let i=document.getElementById('chatInput');if(!i)retu
 function setChatBadge(on){let el=document.querySelector('.bnav-item[data-nav="chat"]');if(!el)return;let dot=el.querySelector('.chat-dot');if(on){if(!dot){dot=document.createElement('span');dot.className='chat-dot';el.appendChild(dot)}dot.style.display='block'}else if(dot)dot.style.display='none'}
 function markChatSeen(){lastChatSeen=Date.now();try{localStorage.setItem('chatSeen',String(lastChatSeen))}catch(e){}setChatBadge(false)}
 function initChatNotify(){if(!fbReady||!db||chatNotifyUnsub)return;try{lastChatSeen=parseInt(localStorage.getItem('chatSeen')||'0',10)||0}catch(e){lastChatSeen=0}
-chatNotifyUnsub=db.collection('chat').orderBy('createdAt','desc').limit(1).onSnapshot(function(sn){if(sn.empty)return;let d=sn.docs[0].data();let t=d.createdAt&&d.createdAt.toMillis?d.createdAt.toMillis():Date.now();let onChat=document.getElementById('page-chat')&&document.getElementById('page-chat').classList.contains('active');if(onChat){markChatSeen();return}if(t>lastChatSeen&&(!currentUser||d.uid!==currentUser.uid)){setChatBadge(true);playMsgSound();maybeNotify('Nuevo mensaje en Veltrix',(d.name||'Alguien')+': '+(d.text||'').slice(0,80),'chat-global')}},function(e){console.log(e)})}
+chatNotifyUnsub=db.collection('chat').orderBy('createdAt','desc').limit(1).onSnapshot(function(sn){if(sn.empty)return;let d=sn.docs[0].data();let t=d.createdAt&&d.createdAt.toMillis?d.createdAt.toMillis():Date.now();let onChat=document.getElementById('page-chat')&&document.getElementById('page-chat').classList.contains('active');if(onChat){markChatSeen();return}if(t>lastChatSeen&&(!currentUser||d.uid!==currentUser.uid)){setChatBadge(true);}},function(e){console.log(e)})}
 async function resolveUsers(uids){if(!db||!uids.length)return;let unique=uids.filter(function(u,i,a){return u&&a.indexOf(u)===i});await Promise.all(unique.map(async function(uid){try{let s=await db.collection('users').doc(uid).get();userCache[uid]=s.exists?s.data():{name:'Usuario',photoURL:''}}catch(e){if(!userCache[uid])userCache[uid]={name:'Usuario',photoURL:''}}}))}
 function startChat(){let box=document.getElementById('chatMsgs');if(!fbReady){box.innerHTML='<div class="empty-state"><p>Falta configurar Firebase.</p></div>';return}updateChatInput();markChatSeen();chatFirst=true;if(chatUnsub){if(_lastChatList.length)renderChat(_lastChatList);return}
 let _chatSnapFirst=true;
 chatUnsub=db.collection('chat').orderBy('createdAt','desc').limit(100).onSnapshot(async function(sn){let list=sn.docs.map(function(d){return Object.assign({id:d.id},d.data({serverTimestamps:'estimate'}))}).reverse();
-if(!_chatSnapFirst&&list.length){let last=list[list.length-1];if(last.uid&&(!currentUser||last.uid!==currentUser.uid)){playMsgSound()}}
+if(!_chatSnapFirst&&list.length){let last=list[list.length-1];if(last.uid&&(!currentUser||last.uid!==currentUser.uid)){/* no sound */}}
 _chatSnapFirst=false;
 _lastChatList=list;let uids=[];list.forEach(function(m){if(m.uid&&uids.indexOf(m.uid)<0)uids.push(m.uid)});await resolveUsers(uids);renderChat(list);let onChat=document.getElementById('page-chat')&&document.getElementById('page-chat').classList.contains('active');if(onChat)markChatSeen()},function(e){console.log(e);box.innerHTML='<div class="empty-state"><p>No se pudo cargar el chat.</p></div>'})}
 function stopChat(){/* se mantiene el listener para el punto rojo; no desuscribir */}
-function renderChat(list){let box=document.getElementById('chatMsgs'),near=box.scrollHeight-box.scrollTop-box.clientHeight<120,html='',prev=null;list.forEach(m=>{let t=m.createdAt&&m.createdAt.toDate?m.createdAt.toDate():new Date(),same=prev&&prev.uid===m.uid&&(t-prev.t)<300000;prev={uid:m.uid,t:t};let mine=currentUser&&currentUser.uid===m.uid;let edited=m.edited?' <span style="font-size:10px;opacity:.7">(editado)</span>':'';let cens=m.censored?' <span style="font-size:10px;opacity:.7;color:#ef4444">(censurado)</span>':'';let handlers=mine?` data-id="${escapeHTML(m.id)}" data-text="${escapeHTML(m.text||'')}" oncontextmenu="event.preventDefault();openMsgMenu('${escapeHTML(m.id)}',event)" ontouchstart="lpStart('${escapeHTML(m.id)}',event)" ontouchend="lpCancel()" ontouchmove="lpCancel()" onmousedown="if(event.button===0)lpStart('${escapeHTML(m.id)}',event)" onmouseup="lpCancel()" onmouseleave="lpCancel()"`:'' ;let txt=`<div class="msg-text">${escapeHTML(m.text||'')}</div>`;let uInfo=(m.uid&&userCache[m.uid])?userCache[m.uid]:null;let dispName=(uInfo&&uInfo.name)||m.name||'Usuario';let dispPhoto=(uInfo&&uInfo.photoURL)||m.photo||'';html+=same?`<div class="msg grouped"${handlers}><div class="msg-av"></div><div class="msg-main">${txt}</div></div>`:`<div class="msg"${handlers}><div class="msg-av" style="cursor:pointer;" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(m.uid||'')}')">${avatarHTML(dispName,dispPhoto,36)}</div><div class="msg-main"><div class="msg-head"><b style="cursor:pointer;" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(m.uid||'')}')">${escapeHTML(dispName)}${(uInfo&&uInfo.verified)||creatorSet.has(m.uid)?verifiedBadge(14):''}</b>${creatorSet.has(m.uid)?'<span class="badge-admin" style="background:#eab308;color:#000">CREADOR</span>':(adminSet.has(m.uid)?'<span class="badge-admin">ADMIN</span>':'')}${edited}${cens}<span class="msg-time">${fmtTime(t)}</span></div>${txt}</div></div>`});box.innerHTML=html||'<div class="empty-state"><p>Aún no hay mensajes. ¡Escribe el primero!</p></div>';if(near||chatFirst){box.scrollTop=box.scrollHeight;chatFirst=false}}
+function renderChat(list){let box=document.getElementById('chatMsgs'),near=box.scrollHeight-box.scrollTop-box.clientHeight<120,html='',prev=null;list.forEach(m=>{let t=m.createdAt&&m.createdAt.toDate?m.createdAt.toDate():new Date(),same=prev&&prev.uid===m.uid&&(t-prev.t)<300000;prev={uid:m.uid,t:t};let mine=currentUser&&currentUser.uid===m.uid;let edited=m.edited?' <span style="font-size:10px;opacity:.7">(editado)</span>':'';let cens=m.censored?' <span style="font-size:10px;opacity:.7;color:#ef4444">(censurado)</span>':'';let handlers=` data-id="${escapeHTML(m.id)}" data-uid="${escapeHTML(m.uid||'')}" data-text="${escapeHTML(m.text||'')}" oncontextmenu="event.preventDefault();openMsgMenu('${escapeHTML(m.id)}',event)" ontouchstart="lpStart('${escapeHTML(m.id)}',event)" ontouchend="lpCancel()" ontouchmove="lpCancel()" onmousedown="if(event.button===0)lpStart('${escapeHTML(m.id)}',event)" onmouseup="lpCancel()" onmouseleave="lpCancel()"`;let txt=`<div class="msg-text">${escapeHTML(m.text||'')}</div>`;let uInfo=(m.uid&&userCache[m.uid])?userCache[m.uid]:null;let dispName=(uInfo&&uInfo.name)||m.name||'Usuario';let dispPhoto=(uInfo&&uInfo.photoURL)||m.photo||'';html+=same?`<div class="msg grouped"${handlers}><div class="msg-av"></div><div class="msg-main">${txt}</div></div>`:`<div class="msg"${handlers}><div class="msg-av" style="cursor:pointer;" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(m.uid||'')}')">${avatarHTML(dispName,dispPhoto,36)}</div><div class="msg-main"><div class="msg-head"><b style="cursor:pointer;" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(m.uid||'')}')">${escapeHTML(dispName)}${(uInfo&&uInfo.verified)||creatorSet.has(m.uid)?verifiedBadge(14):''}</b>${creatorSet.has(m.uid)?'<span class="badge-admin" style="background:#eab308;color:#000">CREADOR</span>':(adminSet.has(m.uid)?'<span class="badge-admin">ADMIN</span>':'')}${edited}${cens}<span class="msg-time">${fmtTime(t)}</span></div>${txt}</div></div>`});box.innerHTML=html||'<div class="empty-state"><p>Aún no hay mensajes. ¡Escribe el primero!</p></div>';if(near||chatFirst){box.scrollTop=box.scrollHeight;chatFirst=false}}
 
 
 /* ===== MODERACIÓN IA CHAT + FOTOS ===== */
@@ -512,7 +523,7 @@ async function aiModerateText(text){
   let gkey=(siteSettings&&siteSettings.geminiKey||'').trim();
   if(gkey){
     try{
-      let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyA1BC6eVLeoFQjW4miLP7raB13Ka7izvbU'+encodeURIComponent(gkey),{
+      let res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+encodeURIComponent(gkey),{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
@@ -646,185 +657,79 @@ async function checkImageNSFW(file){
   }
 }
 
-async function sendChat(){if(!currentUser){openAuth();return}if(userBanned){showToast('Tu cuenta está restringida',true);return}if(siteSettings.chatDisabled){showToast('Chat desactivado temporalmente',true);return}if(siteSettings.maintenance){showToast('Sitio en mantenimiento',true);return}let inp=document.getElementById('chatInput'),text=inp.value.trim();if(!text)return;if(Date.now()-lastSend<1500){showToast('Más despacio',true);return}let mod=await moderateChatMessage(text);if(!mod.ok){showToast(mod.msg||'Mensaje no permitido',true);return}let finalText=(mod.text||text).slice(0,500);lastSend=Date.now();inp.value='';try{await db.collection('chat').add({uid:currentUser.uid,name:(myProfile&&myProfile.name)||'Usuario',photo:(myProfile&&myProfile.photoURL)||'',text:finalText,censored:!!mod.censored,createdAt:firebase.firestore.FieldValue.serverTimestamp()});if(mod.censored)showToast('Mensaje censurado por moderación')}catch(e){console.log(e);showToast('No se pudo enviar el mensaje',true)}}
 
-/* ===== NOTIFICATIONS + FRIENDS + DM ===== */
-let notifEnabled=false,friendsList=[],pendingReqs=[],dmPeer=null,dmUnsub=null,dmChatId=null,reqUnsub=null;
-function requestNotifPermission(){
-  if(!('Notification' in window)){showToast('Este navegador no soporta notificaciones',true);return}
-  if(Notification.permission==='granted'){notifEnabled=true;showToast('Notificaciones activadas');return}
-  Notification.requestPermission().then(function(p){
-    notifEnabled=p==='granted';
-    showToast(notifEnabled?'Notificaciones activadas':'Notificaciones denegadas',!notifEnabled);
-    try{localStorage.setItem('notifOk',notifEnabled?'1':'0')}catch(e){}
-  });
-}
-
-let _audioCtx=null,_lastSoundAt=0;
-document.addEventListener('click',function(){try{let AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!_audioCtx)_audioCtx=new AC();if(_audioCtx.state==='suspended')_audioCtx.resume()}catch(e){}},true);
-function playMsgSound(){
-  try{
-    let now=Date.now();
-    if(now-_lastSoundAt<800)return;
-    _lastSoundAt=now;
-    let AC=window.AudioContext||window.webkitAudioContext;
-    if(!AC)return;
-    if(!_audioCtx)_audioCtx=new AC();
-    if(_audioCtx.state==='suspended')_audioCtx.resume();
-    let t=_audioCtx.currentTime;
-    // tono tipo Discord: dos beeps cortos
-    function tone(freq,start,dur,vol){
-      let o=_audioCtx.createOscillator();
-      let g=_audioCtx.createGain();
-      o.type='sine';
-      o.frequency.value=freq;
-      g.gain.setValueAtTime(0.0001,t+start);
-      g.gain.exponentialRampToValueAtTime(vol,t+start+0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001,t+start+dur);
-      o.connect(g);g.connect(_audioCtx.destination);
-      o.start(t+start);o.stop(t+start+dur+0.02);
-    }
-    tone(880,0,0.09,0.18);
-    tone(1174.7,0.1,0.12,0.14);
-  }catch(e){}
-}
-function maybeNotify(title,body,tag){
-  if(!('Notification' in window))return;
-  if(Notification.permission!=='granted')return;
-  if(document.visibilityState==='visible'&&document.hasFocus())return;
-  try{new Notification(title,{body:body,tag:tag||'veltrix',icon:'/icon-192.png'})}catch(e){}
-}
-function pairId(a,b){return [a,b].sort().join('_')}
-
-function renderFriendsPage(){
-  if(!currentUser){document.getElementById('friendsPanel').innerHTML='<p style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Inicia sesión para usar amigos.</p><button class="btn-main" onclick="openAuth()">Iniciar sesión</button>';return}
-  friendsTab('list');
-  listenFriendRequests();
-  loadFriends();
-}
-function friendsTab(t){
-  ['ftabFriends','ftabReq','ftabSearch'].forEach(function(id){let el=document.getElementById(id);if(!el)return;el.style.background='var(--card-bg)';el.style.color='var(--text-main)';el.style.border='1px solid var(--border-color)'});
-  let map={list:'ftabFriends',req:'ftabReq',search:'ftabSearch'};
-  let active=document.getElementById(map[t]);if(active){active.style.background='var(--accent)';active.style.color='#fff';active.style.border='none'}
-  let box=document.getElementById('friendsPanel');if(!box)return;
-  if(t==='list'){
-    box.innerHTML='<div id="friendsListBox"><p style="color:var(--text-muted);font-size:13px;text-align:center;">Cargando…</p></div>';
-    loadFriends();
-  } else if(t==='req'){
-    box.innerHTML='<div id="reqListBox"><p style="color:var(--text-muted);font-size:13px;text-align:center;">Cargando…</p></div>';
-    loadRequests();
-  } else {
-    box.innerHTML='<input class="fld" id="friendSearch" placeholder="Buscar por nombre…" oninput="searchUsersForFriend()"><div id="friendSearchResults" style="margin-top:10px;"></div>';
-  }
-}
-async function loadFriends(){
-  if(!currentUser||!db)return;
-  try{
-    let s=await db.collection('friends').doc(currentUser.uid).collection('list').get();
-    friendsList=s.docs.map(function(d){return Object.assign({uid:d.id},d.data())});
-    let uids=friendsList.map(function(f){return f.uid});
-    await resolveUsers(uids);
-    let box=document.getElementById('friendsListBox');if(!box)return;
-    if(!friendsList.length){box.innerHTML='<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px;">Aún no tienes amigos. Busca usuarios y envía solicitudes.</p>';return}
-    box.innerHTML=friendsList.map(function(f){
-      let u=userCache[f.uid]||{};
-      let name=u.name||f.name||'Usuario';
-      return '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;margin-bottom:8px;">'+
-        '<div style="cursor:pointer;" onclick="viewUserProfile(\''+escapeHTML(f.uid)+'\')">'+avatarHTML(name,u.photoURL||f.photo||'',40)+'</div>'+
-        '<div style="flex:1;min-width:0;cursor:pointer;" onclick="viewUserProfile(\''+escapeHTML(f.uid)+'\')"><b style="font-size:14px;">'+escapeHTML(name)+'</b></div>'+
-        '<button class="btn-main" style="width:auto;padding:8px 12px;font-size:12px;" onclick="openDM(\''+escapeHTML(f.uid)+'\')">Mensaje</button>'+
-        '<button style="background:none;border:1px solid var(--border-color);color:var(--danger);border-radius:10px;padding:8px 10px;font-size:11px;font-weight:700;cursor:pointer;" onclick="removeFriend(\''+escapeHTML(f.uid)+'\')">Quitar</button></div>';
-    }).join('');
-  }catch(e){console.log(e)}
-}
-function listenFriendRequests(){
-  if(!currentUser||!db)return;
-  if(reqUnsub)return;
-  reqUnsub=db.collection('friendRequests').where('to','==',currentUser.uid).where('status','==','pending')
-    .onSnapshot(function(sn){
-      pendingReqs=sn.docs.map(function(d){return Object.assign({id:d.id},d.data())});
-      let badge=document.getElementById('reqBadge');
-      if(badge){if(pendingReqs.length){badge.style.display='inline';badge.textContent=pendingReqs.length}else badge.style.display='none'}
-    },function(e){console.log(e)});
-}
-async function loadRequests(){
-  if(!currentUser||!db)return;
-  try{
-    let [incoming,outgoing]=await Promise.all([
-      db.collection('friendRequests').where('to','==',currentUser.uid).where('status','==','pending').get(),
-      db.collection('friendRequests').where('from','==',currentUser.uid).where('status','==','pending').get()
-    ]);
-    let box=document.getElementById('reqListBox');if(!box)return;
-    let html='<div style="font-size:12px;font-weight:800;color:var(--text-muted);margin-bottom:8px;">RECIBIDAS</div>';
-    if(!incoming.docs.length)html+='<p style="color:var(--text-muted);font-size:12px;margin-bottom:12px;">Ninguna solicitud recibida.</p>';
-    else html+=incoming.docs.map(function(d){let x=d.data();return '<div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;margin-bottom:8px;"><div style="flex:1;"><b>'+escapeHTML(x.fromName||'Usuario')+'</b><div style="font-size:11px;color:var(--text-muted);">Quiere ser tu amigo</div></div><button class="btn-main" style="width:auto;padding:8px 12px;font-size:12px;background:#10b981;" onclick="acceptFriend(\''+escapeHTML(d.id)+'\',\''+escapeHTML(x.from)+'\')">Aceptar</button><button style="background:none;border:1px solid var(--border-color);color:var(--text-muted);border-radius:10px;padding:8px 10px;font-size:12px;cursor:pointer;" onclick="rejectFriend(\''+escapeHTML(d.id)+'\')">Rechazar</button></div>'}).join('');
-    html+='<div style="font-size:12px;font-weight:800;color:var(--text-muted);margin:16px 0 8px;">ENVIADAS</div>';
-    if(!outgoing.docs.length)html+='<p style="color:var(--text-muted);font-size:12px;">Ninguna solicitud enviada.</p>';
-    else html+=outgoing.docs.map(function(d){let x=d.data();return '<div style="padding:12px;background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;margin-bottom:8px;"><b>'+escapeHTML(x.toName||'Usuario')+'</b><div style="font-size:11px;color:var(--text-muted);">Pendiente…</div></div>'}).join('');
-    box.innerHTML=html;
-  }catch(e){console.log(e)}
-}
-async function searchUsersForFriend(){
-  let q=(document.getElementById('friendSearch').value||'').trim().toLowerCase();
-  let box=document.getElementById('friendSearchResults');if(!box)return;
-  if(q.length<2){box.innerHTML='';return}
-  try{
-    let s=await db.collection('users').limit(50).get();
-    let hits=s.docs.map(function(d){return Object.assign({uid:d.id},d.data())}).filter(function(u){
-      return u.uid!==currentUser.uid&&(u.name||'').toLowerCase().indexOf(q)>=0;
-    }).slice(0,20);
-    box.innerHTML=hits.length?hits.map(function(u){
-      return '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;margin-bottom:6px;">'+
-        avatarHTML(u.name,u.photoURL,36)+'<div style="flex:1;min-width:0;"><b style="font-size:13px;">'+escapeHTML(u.name||'Usuario')+'</b></div>'+
-        '<button class="btn-main" style="width:auto;padding:8px 12px;font-size:11px;" onclick="sendFriendRequest(\''+escapeHTML(u.uid)+'\',\''+escapeHTML(u.name||'Usuario')+'\')">Agregar</button></div>';
-    }).join(''):'<p style="color:var(--text-muted);font-size:12px;text-align:center;">Sin resultados</p>';
-  }catch(e){console.log(e)}
-}
-async function sendFriendRequest(toUid,toName){
+/* ===== REPORTES + RANKING ===== */
+async function submitReport(payload){
+  if(!fbReady||!db){showToast('Firebase no disponible',true);return}
   if(!currentUser){openAuth();return}
-  if(toUid===currentUser.uid)return;
   try{
-    let existing=await db.collection('friends').doc(currentUser.uid).collection('list').doc(toUid).get();
-    if(existing.exists){showToast('Ya son amigos');return}
-    let id=pairId(currentUser.uid,toUid)+'_req';
-    await db.collection('friendRequests').doc(id).set({
-      from:currentUser.uid,to:toUid,
-      fromName:(myProfile&&myProfile.name)||'Usuario',
-      toName:toName||'Usuario',
-      status:'pending',
-      createdAt:firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true});
-    showToast('Solicitud enviada');
-  }catch(e){console.log(e);showToast('No se pudo enviar',true)}
+    await db.collection('reports').add(Object.assign({
+      uid:currentUser.uid,
+      name:(myProfile&&myProfile.name)||'Usuario',
+      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+      status:'open'
+    },payload));
+    showToast('Reporte enviado. Gracias.');
+  }catch(e){console.log(e);showToast('No se pudo enviar el reporte',true)}
 }
-async function acceptFriend(reqId,fromUid){
-  if(!currentUser)return;
-  try{
-    let myName=(myProfile&&myProfile.name)||'Usuario';
-    let other=userCache[fromUid]||{};
-    let batch=db.batch();
-    batch.set(db.collection('friends').doc(currentUser.uid).collection('list').doc(fromUid),{name:other.name||'Usuario',photo:other.photoURL||'',since:firebase.firestore.FieldValue.serverTimestamp()});
-    batch.set(db.collection('friends').doc(fromUid).collection('list').doc(currentUser.uid),{name:myName,photo:(myProfile&&myProfile.photoURL)||'',since:firebase.firestore.FieldValue.serverTimestamp()});
-    batch.update(db.collection('friendRequests').doc(reqId),{status:'accepted'});
-    await batch.commit();
-    showToast('Ahora son amigos');
-    loadRequests();loadFriends();
-  }catch(e){console.log(e);showToast('Error al aceptar',true)}
+function reportGame(){
+  if(!curGame)return;
+  if(!currentUser){openAuth();return}
+  let reason=prompt('¿Por qué reportas este juego?\n1) Link roto\n2) Malware / sospechoso\n3) Contenido engañoso\n4) Otro\n\nEscribe el número o el motivo:','');
+  if(reason===null||!String(reason).trim())return;
+  let map={'1':'Link roto','2':'Malware / sospechoso','3':'Contenido engañoso','4':'Otro'};
+  let r=map[String(reason).trim()]||String(reason).trim();
+  submitReport({type:'game',game_id:curGame.game_id,game_title:curGame.title||'',reason:r});
 }
-async function rejectFriend(reqId){
-  try{await db.collection('friendRequests').doc(reqId).update({status:'rejected'});showToast('Solicitud rechazada');loadRequests()}catch(e){showToast('Error',true)}
+function reportChatMsg(msgId,msgUid,msgText){
+  if(!currentUser){openAuth();return}
+  if(msgUid&&currentUser.uid===msgUid){showToast('No puedes reportar tu mensaje',true);return}
+  let reason=prompt('Motivo del reporte del mensaje:\n1) Spam\n2) Insultos / acoso\n3) Contenido inapropiado\n4) Otro','');
+  if(reason===null||!String(reason).trim())return;
+  let map={'1':'Spam','2':'Insultos / acoso','3':'Contenido inapropiado','4':'Otro'};
+  let r=map[String(reason).trim()]||String(reason).trim();
+  submitReport({type:'chat',msg_id:msgId||'',msg_uid:msgUid||'',msg_text:(msgText||'').slice(0,200),reason:r});
 }
-async function removeFriend(uid){
-  if(!confirm('¿Quitar de amigos?'))return;
-  try{
-    await db.collection('friends').doc(currentUser.uid).collection('list').doc(uid).delete();
-    await db.collection('friends').doc(uid).collection('list').doc(currentUser.uid).delete();
-    showToast('Amigo eliminado');loadFriends();
-  }catch(e){showToast('Error',true)}
+function renderRanking(mode){
+  mode=mode||'downloads';
+  let b1=document.getElementById('rankTabDl'),b2=document.getElementById('rankTabRt');
+  if(b1&&b2){
+    if(mode==='downloads'){b1.style.background='var(--accent)';b1.style.color='#fff';b1.style.border='none';b2.style.background='var(--card-bg)';b2.style.color='var(--text-main)';b2.style.border='1px solid var(--border-color)'}
+    else{b2.style.background='var(--accent)';b2.style.color='#fff';b2.style.border='none';b1.style.background='var(--card-bg)';b1.style.color='var(--text-main)';b1.style.border='1px solid var(--border-color)'}
+  }
+  let list=document.getElementById('rankList');if(!list)return;
+  if(!games||!games.length){list.innerHTML='<p style="text-align:center;color:var(--text-muted);padding:20px;">No hay juegos aún.</p>';return}
+  let arr=games.slice();
+  if(mode==='downloads'){
+    arr.sort(function(a,b){return getStat(b.game_id)-getStat(a.game_id)});
+  }else{
+    arr.sort(function(a,b){
+      let ra=parseFloat(a.rating_avg)||0,rb=parseFloat(b.rating_avg)||0;
+      if(rb!==ra)return rb-ra;
+      return getStat(b.game_id)-getStat(a.game_id);
+    });
+  }
+  arr=arr.slice(0,30);
+  list.innerHTML=arr.map(function(g,i){
+    let medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';
+    let stat=mode==='downloads'?formatNumber(getStat(g.game_id))+' descargas':(g.rating_avg||'0.0')+' ★';
+    return '<div class="card" style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:8px;cursor:pointer;" onclick="openDetail(\''+g.game_id+'\')">'+
+      '<div style="font-size:18px;font-weight:900;width:36px;text-align:center;">'+medal+'</div>'+
+      '<img src="'+(g.img||'')+'" alt="" style="width:48px;height:48px;border-radius:12px;object-fit:cover;background:var(--border-color);">'+
+      '<div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:14px;" class="truncate">'+escapeHTML(g.title||'')+'</div>'+
+      '<div style="font-size:12px;color:var(--text-muted);">'+escapeHTML(g.category||'')+' · '+stat+'</div></div></div>';
+  }).join('')||'<p style="text-align:center;color:var(--text-muted);">Sin datos</p>';
 }
+
+
+/* ===== MENSAJES PRIVADOS (sin sistema de amigos) ===== */
+let dmPeer=null,dmUnsub=null,dmChatId=null;
+function pairId(a,b){return [a,b].sort().join('_')}
 function openDM(uid){
   if(!currentUser){openAuth();return}
+  if(!uid||uid===currentUser.uid){showToast('No puedes escribirte a ti mismo',true);return}
   dmPeer=uid;dmChatId=pairId(currentUser.uid,uid);
+  closeViewProfile();
   showPage('dm');
   let u=userCache[uid]||{};
   document.getElementById('dmTitle').textContent=u.name||'Chat privado';
@@ -833,18 +738,13 @@ function openDM(uid){
   dmUnsub=db.collection('dms').doc(dmChatId).collection('messages').orderBy('createdAt','asc').limitToLast(100)
     .onSnapshot(async function(sn){
       let list=sn.docs.map(function(d){return Object.assign({id:d.id},d.data())});
-      if(!_dmFirst&&list.length){
-        let last=list[list.length-1];
-        if(last.uid&&currentUser&&last.uid!==currentUser.uid){
-          playMsgSound();
-          maybeNotify('Mensaje privado',(last.name||'Amigo')+': '+(last.text||'').slice(0,80),'dm-'+dmChatId);
-        }
-      }
       _dmFirst=false;
       let uids=list.map(function(m){return m.uid}).filter(Boolean);
       await resolveUsers(uids.concat([uid]));
+      let uu=userCache[uid]||{};
+      let t=document.getElementById('dmTitle');if(t)t.textContent=uu.name||'Chat privado';
       renderDM(list);
-    },function(e){console.log(e)});
+    },function(e){console.log(e);showToast('No se pudo cargar el chat',true)});
 }
 function renderDM(list){
   let box=document.getElementById('dmMsgs');if(!box)return;
@@ -854,31 +754,103 @@ function renderDM(list){
     let name=u.name||m.name||'Usuario';
     return '<div style="display:flex;gap:8px;padding:6px 12px;'+(mine?'flex-direction:row-reverse;':'')+'">'+
       avatarHTML(name,u.photoURL||m.photo,28)+
-      '<div style="max-width:75%;background:'+(mine?'var(--accent)':'var(--bg-body)')+';color:'+(mine?'#fff':'var(--text-main)')+';padding:10px 12px;border-radius:14px;font-size:13px;line-height:1.4;border:1px solid '+(mine?'transparent':'var(--border-color)')+';">'+escapeHTML(m.text||'')+'</div></div>';
+      '<div style="max-width:75%;background:'+(mine?'var(--accent)':'var(--bg-body)')+';color:'+(mine?'#fff':'var(--text-main)')+';padding:10px 12px;border-radius:14px;font-size:13px;line-height:1.4;border:1px solid '+(mine?'transparent':'var(--border-color)')+';">'+escapeHTML(m.text||'')+(m.censored?' <span style="opacity:.7;font-size:10px">(censurado)</span>':'')+'</div></div>';
   }).join('')||'<p style="text-align:center;color:var(--text-muted);font-size:12px;padding:20px;">Escribe el primer mensaje</p>';
   box.scrollTop=box.scrollHeight;
 }
 async function sendDM(){
   if(!currentUser||!dmChatId)return;
+  if(userBanned){showToast('Tu cuenta está restringida',true);return}
   let inp=document.getElementById('dmInput');let text=(inp.value||'').trim();if(!text)return;
-  let mod=await moderateChatMessage(text);if(!mod.ok){showToast(mod.msg||'Mensaje no permitido',true);return}
+  let mod=typeof moderateChatMessage==='function'?await moderateChatMessage(text):{ok:true,text:text};
+  if(!mod.ok){showToast(mod.msg||'No permitido',true);return}
   let finalText=(mod.text||text).slice(0,500);
   inp.value='';
   try{
-    await db.collection('dms').doc(dmChatId).set({users:[currentUser.uid,dmPeer],updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+    await db.collection('dms').doc(dmChatId).set({
+      users:[currentUser.uid,dmPeer],
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      lastText:finalText,
+      lastUid:currentUser.uid
+    },{merge:true});
     await db.collection('dms').doc(dmChatId).collection('messages').add({
-      uid:currentUser.uid,name:(myProfile&&myProfile.name)||'Usuario',photo:(myProfile&&myProfile.photoURL)||'',
-      text:finalText,censored:!!mod.censored,createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      uid:currentUser.uid,
+      name:(myProfile&&myProfile.name)||'Usuario',
+      photo:(myProfile&&myProfile.photoURL)||'',
+      text:finalText,
+      censored:!!mod.censored,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
     if(mod.censored)showToast('Mensaje censurado por moderación');
   }catch(e){console.log(e);showToast('No se pudo enviar',true)}
 }
+async function loadDMList(){
+  let box=document.getElementById('dmListBox');if(!box)return;
+  if(!currentUser){box.innerHTML='<p style="text-align:center;color:var(--text-muted);font-size:13px;padding:16px;">Inicia sesión para ver mensajes.</p><button class="btn-main" onclick="openAuth()">Iniciar sesión</button>';return}
+  box.innerHTML='<p style="text-align:center;color:var(--text-muted);font-size:13px;">Cargando…</p>';
+  try{
+    let s=await db.collection('dms').where('users','array-contains',currentUser.uid).orderBy('updatedAt','desc').limit(40).get();
+    if(s.empty){box.innerHTML='<p style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">No tienes conversaciones aún.<br>Abre el perfil de alguien y toca Mensaje privado.</p>';return}
+    let peers=[];
+    s.docs.forEach(function(d){
+      let u=(d.data().users||[]).filter(function(x){return x!==currentUser.uid})[0];
+      if(u)peers.push({uid:u,data:d.data(),id:d.id});
+    });
+    await resolveUsers(peers.map(function(p){return p.uid}));
+    box.innerHTML=peers.map(function(p){
+      let u=userCache[p.uid]||{};
+      let name=u.name||'Usuario';
+      let last=p.data.lastText||'';
+      return '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;margin-bottom:8px;cursor:pointer;" onclick="openDM(\''+escapeHTML(p.uid)+'\')">'+
+        avatarHTML(name,u.photoURL||'',40)+
+        '<div style="flex:1;min-width:0;"><b style="font-size:14px;">'+escapeHTML(name)+'</b>'+
+        '<div style="font-size:12px;color:var(--text-muted);" class="truncate">'+escapeHTML(last)+'</div></div></div>';
+    }).join('');
+  }catch(e){
+    console.log(e);
+    box.innerHTML='<p style="text-align:center;color:var(--text-muted);font-size:12px;padding:16px;">No se pudieron cargar. Si Firebase pide un índice, créalo desde el enlace del error.</p>';
+  }
+}
+
+async function sendChat(){if(!currentUser){openAuth();return}if(userBanned){showToast('Tu cuenta está restringida',true);return}if(siteSettings.chatDisabled){showToast('Chat desactivado temporalmente',true);return}if(siteSettings.maintenance){showToast('Sitio en mantenimiento',true);return}let inp=document.getElementById('chatInput'),text=inp.value.trim();if(!text)return;if(Date.now()-lastSend<1500){showToast('Más despacio',true);return}let mod=await moderateChatMessage(text);if(!mod.ok){showToast(mod.msg||'Mensaje no permitido',true);return}let finalText=(mod.text||text).slice(0,500);lastSend=Date.now();inp.value='';try{await db.collection('chat').add({uid:currentUser.uid,name:(myProfile&&myProfile.name)||'Usuario',photo:(myProfile&&myProfile.photoURL)||'',text:finalText,censored:!!mod.censored,createdAt:firebase.firestore.FieldValue.serverTimestamp()});if(mod.censored)showToast('Mensaje censurado por moderación')}catch(e){console.log(e);showToast('No se pudo enviar el mensaje',true)}}
 
 async function delMsg(id){try{await db.collection('chat').doc(id).delete()}catch(e){showToast('No se pudo eliminar',true)}}
 let _lpTimer=null,_lpId=null;
 function lpStart(id,e){lpCancel();_lpId=id;_lpTimer=setTimeout(function(){openMsgMenu(id,e);},500)}
 function lpCancel(){if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null}}
-function openMsgMenu(id,e){lpCancel();let old=document.getElementById('msgMenu');if(old)old.remove();let menu=document.createElement('div');menu.id='msgMenu';menu.style.cssText='position:fixed;z-index:200;background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;padding:6px;box-shadow:0 8px 32px rgba(0,0,0,.45);min-width:150px';let x=(e.touches&&e.touches[0]?e.touches[0].clientX:e.clientX)||innerWidth/2;let y=(e.touches&&e.touches[0]?e.touches[0].clientY:e.clientY)||innerHeight/2;menu.style.left=Math.min(x,innerWidth-170)+'px';menu.style.top=Math.min(y-10,innerHeight-110)+'px';menu.innerHTML='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:var(--text-main);font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="editMsg(\''+id+'\')">Editar</button><button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:var(--danger);font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="delMsgConfirm(\''+id+'\')">Eliminar</button>';document.body.appendChild(menu);setTimeout(function(){function closer(ev){if(!menu.contains(ev.target)){menu.remove();document.removeEventListener('click',closer);document.removeEventListener('touchstart',closer)}}document.addEventListener('click',closer);document.addEventListener('touchstart',closer)},30)}
+function openMsgMenu(id,e){
+  lpCancel();
+  let old=document.getElementById('msgMenu');if(old)old.remove();
+  let el=document.querySelector('[data-id="'+id+'"]');
+  let msgUid=el?el.getAttribute('data-uid'):'';
+  let msgText=el?el.getAttribute('data-text'):'';
+  let mine=currentUser&&msgUid===currentUser.uid;
+  let menu=document.createElement('div');
+  menu.id='msgMenu';
+  menu.style.cssText='position:fixed;z-index:200;background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;padding:6px;box-shadow:0 8px 32px rgba(0,0,0,.45);min-width:160px';
+  let x=(e.touches&&e.touches[0]?e.touches[0].clientX:e.clientX)||innerWidth/2;
+  let y=(e.touches&&e.touches[0]?e.touches[0].clientY:e.clientY)||innerHeight/2;
+  menu.style.left=Math.min(x,innerWidth-180)+'px';
+  menu.style.top=Math.min(y-10,innerHeight-140)+'px';
+  let html='';
+  if(mine){
+    html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:var(--text-main);font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="editMsg(\''+id+'\')">Editar</button>';
+    html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:var(--danger);font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="delMsg(\''+id+'\');document.getElementById(\'msgMenu\').remove()">Eliminar</button>';
+  } else {
+    html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:var(--accent);font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="openDM(\''+(msgUid||'')+'\');let m=document.getElementById(\'msgMenu\');if(m)m.remove()">Mensaje privado</button>';html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:#f59e0b;font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="reportChatMsg(\''+id+'\',\''+(msgUid||'')+'\',\''+(msgText||'').replace(/'/g,'')+'\');let m=document.getElementById(\'msgMenu\');if(m)m.remove()">Reportar</button>';
+    if(typeof isAdmin==='function'&&isAdmin()){
+      html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:var(--danger);font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="delMsg(\''+id+'\');document.getElementById(\'msgMenu\').remove()">Eliminar (admin)</button>';
+    }
+  }
+  menu.innerHTML=html;
+  document.body.appendChild(menu);
+  setTimeout(function(){
+    document.addEventListener('click',function closeM(ev){
+      if(!menu.contains(ev.target)){menu.remove();document.removeEventListener('click',closeM)}
+    });
+  },10);
+}
+
 async function editMsg(id){let m=document.getElementById('msgMenu');if(m)m.remove();let el=document.querySelector('[data-id="'+id+'"]');let old=el?el.getAttribute('data-text'):'';let neu=prompt('Editar mensaje:',old||'');if(neu===null||!neu.trim())return;try{await db.collection('chat').doc(id).update({text:neu.trim().slice(0,500),edited:true});showToast('Mensaje editado')}catch(e){showToast('No se pudo editar',true)}}
 async function delMsgConfirm(id){let m=document.getElementById('msgMenu');if(m)m.remove();if(!confirm('¿Eliminar este mensaje?'))return;await delMsg(id)}
 </script>
