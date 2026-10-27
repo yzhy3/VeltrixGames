@@ -88,7 +88,7 @@ function viewPanel(u){
     '<h2 id="ft">Nuevo juego</h2><div class="card">'+
     '<label>Título *</label><input id="f_title">'+
     '<div class="g"><div><label>Desarrollador</label><input id="f_dev"></div><div><label>Categoría</label><input id="f_cat" placeholder="Mods"></div></div>'+
-    '<label>Imagen del juego *</label><input type="file" id="f_img_file" accept="image/*" style="margin-bottom:8px">'+'<input id="f_img" placeholder="O pega URL https://...">'+'<p class="muted" style="font-size:11px;margin-bottom:10px">Sube un archivo o pega un enlace</p>'+
+    '<label>Imagen (https) *</label><input id="f_img" placeholder="https://...">'+
     '<label>Enlace APK *</label><input id="f_apk" placeholder="https://...">'+
     '<label>Descripción</label><textarea id="f_desc"></textarea>'+
     '<label>Novedades</label><textarea id="f_log"></textarea>'+
@@ -151,7 +151,7 @@ function renderSettings(){
     '<div class="sw '+(chatOff?'on':'')+'" id="swChat" onclick="toggleSw(\'chatDisabled\')"><i></i></div></div>'+
     '<div class="switch"><div><b>Desactivar reseñas</b><div class="muted" style="font-size:12px">Nadie puede publicar reseñas</div></div>'+
     '<div class="sw '+(revOff?'on':'')+'" id="swRev" onclick="toggleSw(\'reviewsDisabled\')"><i></i></div></div>'+
-    '<label style="margin-top:12px">Anuncio global (banner)</label>'+
+    '<label style="margin-top:12px">Palabras bloqueadas (chat)</label>'+'<textarea id="badWords" placeholder="palabra1, palabra2, ...">'+esc(s.badWords||'')+'</textarea>'+'<p class="muted" style="font-size:11px;margin-bottom:10px">Separadas por coma. Se suman a la lista automática.</p>'+'<label style="margin-top:12px">Anuncio global (banner)</label>'+
     '<input id="announce" placeholder="Ej: Nuevo juego disponible" value="'+esc(s.announcement||'')+'">'+
     '<label>Título del sitio</label>'+
     '<input id="siteTitle" placeholder="Veltrix Games" value="'+esc(s.siteTitle||'')+'">'+
@@ -168,6 +168,7 @@ function saveSettings(){
     reviewsDisabled:!!settings.reviewsDisabled,
     maintenanceMessage:($('maintMsg').value||'').trim()||'Estamos en mantenimiento. Vuelve pronto.',
     announcement:($('announce').value||'').trim(),
+    badWords:($('badWords').value||'').trim(),
     siteTitle:($('siteTitle').value||'').trim()||'Veltrix Games',
     updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
     updatedBy:auth.currentUser.uid
@@ -334,34 +335,8 @@ function resetGame(){
   ['f_title','f_dev','f_cat','f_img','f_apk','f_desc','f_log','f_sec','f_badge','f_label','f_media'].forEach(function(id){var el=$(id);if(el)el.value=''});
   if($('f_color'))$('f_color').value='#EF4444';if($('f_active'))$('f_active').checked=true;
 }
-function uploadGameImage(file){
-  return new Promise(function(resolve,reject){
-    if(!storage) return reject(new Error('Storage no disponible. Actívalo en Firebase.'));
-    if(!file||!file.type||file.type.indexOf('image/')!==0) return reject(new Error('Archivo no es imagen'));
-    if(file.size>5*1024*1024) return reject(new Error('Máx 5 MB'));
-    var ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
-    var ref=storage.ref('games/'+Date.now()+'_'+Math.random().toString(36).slice(2,8)+'.'+ext);
-    ref.put(file,{contentType:file.type}).then(function(){return ref.getDownloadURL()}).then(resolve).catch(reject);
-  });
-}
 function saveGame(){
-  var title=$('f_title').value.trim(),apk=$('f_apk').value.trim();
-  if(!title||!apk)return toast('Título y APK obligatorios',1);
-  var fileEl=$('f_img_file');
-  var file=fileEl&&fileEl.files&&fileEl.files[0];
-  var img=$('f_img').value.trim();
-  if(!file&&!img)return toast('Sube una imagen o pega un enlace',1);
-  if(file){
-    toast('Subiendo imagen...');
-    uploadGameImage(file).then(function(url){
-      $('f_img').value=url;
-      saveGameWithImg(title,url,apk);
-    }).catch(function(e){toast(e.message||'Error al subir imagen',1)});
-    return;
-  }
-  saveGameWithImg(title,img,apk);
-}
-function saveGameWithImg(title,img,apk){
+  var title=$('f_title').value.trim(),img=$('f_img').value.trim(),apk=$('f_apk').value.trim();
   if(!title||!img||!apk)return toast('Título, imagen y APK obligatorios',1);
   var media=($('f_media').value||'').split('\n').map(function(l){return l.trim()}).filter(Boolean).map(function(url){return{type:/youtu\.?be/.test(url)?'youtube':'image',url:url}});
   var data={title:title,developer:$('f_dev').value.trim()||'Veltrix',category:$('f_cat').value.trim()||'Otros',img:img,apk_url:apk,desc_game:$('f_desc').value.trim(),changelog:$('f_log').value.trim(),security_info:$('f_sec').value.trim(),badge_text:$('f_badge').value.trim(),label_text:$('f_label').value.trim(),label_color:$('f_color').value.trim()||'#EF4444',media:media,is_active:$('f_active').checked};
