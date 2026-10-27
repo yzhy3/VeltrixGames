@@ -151,7 +151,7 @@ function renderSettings(){
     '<div class="sw '+(chatOff?'on':'')+'" id="swChat" onclick="toggleSw(\'chatDisabled\')"><i></i></div></div>'+
     '<div class="switch"><div><b>Desactivar reseñas</b><div class="muted" style="font-size:12px">Nadie puede publicar reseñas</div></div>'+
     '<div class="sw '+(revOff?'on':'')+'" id="swRev" onclick="toggleSw(\'reviewsDisabled\')"><i></i></div></div>'+
-    '<label style="margin-top:12px">Palabras bloqueadas (chat)</label>'+'<textarea id="badWords" placeholder="palabra1, palabra2, ...">'+esc(s.badWords||'')+'</textarea>'+'<p class="muted" style="font-size:11px;margin-bottom:10px">Separadas por coma. Se suman a la lista automática.</p>'+'<label style="margin-top:12px">Anuncio global (banner)</label>'+
+    '<label style="margin-top:12px">OpenAI API Key (moderación IA)</label>'+'<input id="openaiKey" type="password" placeholder="sk-..." value="'+esc(s.openaiKey||'')+'">'+'<p class="muted" style="font-size:11px;margin-bottom:10px">Usa el endpoint de Moderations de OpenAI (recomendado).</p>'+'<label>Gemini API Key (alternativa)</label>'+'<input id="geminiKey" type="password" placeholder="AIza..." value="'+esc(s.geminiKey||'')+'">'+'<p class="muted" style="font-size:11px;margin-bottom:10px">Si no hay OpenAI, se usa Gemini. Sin keys = filtro básico local.</p>'+'<label style="margin-top:12px">Anuncio global (banner)</label>'+
     '<input id="announce" placeholder="Ej: Nuevo juego disponible" value="'+esc(s.announcement||'')+'">'+
     '<label>Título del sitio</label>'+
     '<input id="siteTitle" placeholder="Veltrix Games" value="'+esc(s.siteTitle||'')+'">'+
@@ -168,7 +168,8 @@ function saveSettings(){
     reviewsDisabled:!!settings.reviewsDisabled,
     maintenanceMessage:($('maintMsg').value||'').trim()||'Estamos en mantenimiento. Vuelve pronto.',
     announcement:($('announce').value||'').trim(),
-    badWords:($('badWords').value||'').trim(),
+    openaiKey:($('openaiKey').value||'').trim(),
+    geminiKey:($('geminiKey').value||'').trim(),
     siteTitle:($('siteTitle').value||'').trim()||'Veltrix Games',
     updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
     updatedBy:auth.currentUser.uid
