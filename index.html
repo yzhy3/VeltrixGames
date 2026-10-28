@@ -462,7 +462,7 @@ async function adminUnbanFromProfile(uid){
   try{await db.collection('bans').doc(uid).delete();showToast('Ban eliminado');viewUserProfile(uid)}catch(e){showToast('Error',true)}
 }
 
-async function renderProfile(){let c=document.getElementById('profileBox');if(!fbReady){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;">Firebase no está configurado.</p>';return}if(!currentUser){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:12px;">Inicia sesión para ver tu perfil.</p><button class="btn-main" onclick="openAuth()">Iniciar sesión</button>';return}let p=myProfile||{};c.innerHTML=`<div style="display:flex;justify-content:center;margin-bottom:8px;">${avatarHTML(p.name,p.photoURL,84)}</div><div style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:16px;">${escapeHTML(currentUser.email||'')}${userBadgesHTML(currentUser.uid,p)}<br>Reseñas escritas: <b id="pRevCount">0</b><div id="pRankBox" style="margin-top:8px;"></div></div><input class="fld" id="pName" placeholder="Nombre" maxlength="30" value="${escapeHTML(p.name||'')}"><input class="fld" id="pPhoto" placeholder="Foto (enlace https://...)" value="${escapeHTML(p.photoURL||'')}"><textarea class="fld" id="pBio" placeholder="Sobre ti (máx. 160)" maxlength="160" style="min-height:70px;">${escapeHTML(p.bio||'')}</textarea><button class="btn-main" onclick="saveProfile()">Guardar perfil</button>${isAdmin()?'<a href="/admin/" class="btn-main" style="display:block;text-align:center;text-decoration:none;margin-top:8px;background:'+(isCreator()?'#eab308;color:#000':'#3B82F6')+';">'+(isCreator()?'Panel Creador':'Panel Admin')+'</a>':''}<button class="btn-main" style="background:transparent;border:1px solid var(--border-color);color:var(--text-main);margin-top:8px;" onclick="logout()">Cerrar sesión</button>`;try{let r=await db.collection('reviews').where('uid','==',currentUser.uid).get();let e=document.getElementById('pRevCount');if(e)e.innerText=r.size;let rb=document.getElementById('pRankBox');if(rb){let cnt=r.size;let st=(myProfile&&myProfile.reviewStreak)||0;rb.innerHTML=reviewRankHTML(cnt)+(st>1?' <span style="font-size:12px;color:#f97316;font-weight:700;margin-left:6px;">🔥 Racha '+st+' días</span>':'')}}catch(e){}}
+async function renderProfile(){let c=document.getElementById('profileBox');if(!fbReady){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;">Firebase no está configurado.</p>';return}if(!currentUser){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:12px;">Inicia sesión para ver tu perfil.</p><button class="btn-main" onclick="openAuth()">Iniciar sesión</button>';return}let p=myProfile||{};c.innerHTML=`<div style="display:flex;justify-content:center;margin-bottom:8px;">${avatarHTML(p.name,p.photoURL,84)}</div><div style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:16px;">${escapeHTML(currentUser.email||'')}${userBadgesHTML(currentUser.uid,p)}<br>Reseñas escritas: <b id="pRevCount">0</b><div id="pRankBox" style="margin-top:8px;"></div></div><input class="fld" id="pName" placeholder="Nombre" maxlength="30" value="${escapeHTML(p.name||'')}"><input class="fld" id="pPhoto" placeholder="Foto (enlace https://...)" value="${escapeHTML(p.photoURL||'')}"><textarea class="fld" id="pBio" placeholder="Sobre ti (máx. 160)" maxlength="160" style="min-height:70px;">${escapeHTML(p.bio||'')}</textarea><button class="btn-main" onclick="saveProfile()">Guardar perfil</button>${isAdmin()?'<a href="/admin/" class="btn-main" style="display:block;text-align:center;text-decoration:none;margin-top:8px;background:'+(isCreator()?'#eab308;color:#000':'#3B82F6')+';">'+(isCreator()?'Panel Creador':'Panel Admin')+'</a>':''}<button class="btn-main" style="background:transparent;border:1px solid var(--border-color);color:var(--text-main);margin-top:8px;" onclick="logout()">Cerrar sesión</button>`;try{let cnt=await refreshUserReviewCount(currentUser.uid);let e=document.getElementById('pRevCount');if(e)e.innerText=cnt;let rb=document.getElementById('pRankBox');if(rb){let st=(myProfile&&myProfile.reviewStreak)||0;rb.innerHTML=reviewRankHTML(cnt)+(st>1?' <span style="font-size:12px;color:#f97316;font-weight:700;margin-left:6px;">🔥 Racha '+st+' días</span>':'')}}catch(e){}}
 async function saveProfile(){let name=document.getElementById('pName').value.trim(),photo=document.getElementById('pPhoto').value.trim(),bio=document.getElementById('pBio').value.trim();if(name.length<2||name.length>30){showToast('El nombre debe tener entre 2 y 30 letras.',true);return}if(photo&&!/^https:\/\//.test(photo)){showToast('La foto debe ser un enlace https.',true);return}try{await db.collection('users').doc(currentUser.uid).set({name:name,photoURL:photo,bio:bio.slice(0,160)},{merge:true});myProfile=Object.assign({},myProfile,{name:name,photoURL:photo,bio:bio});userCache[currentUser.uid]=Object.assign({},userCache[currentUser.uid]||{},{name:name,photoURL:photo,bio:bio});updateAuthUI();renderProfile();if(typeof _lastChatList!=='undefined'&&_lastChatList.length)renderChat(_lastChatList);showToast('Perfil guardado')}catch(e){console.log(e);showToast('No se pudo guardar el perfil',true)}}
 
 
@@ -491,19 +491,21 @@ function dayKey(d){
   let x=d instanceof Date?d:new Date(d);
   return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
 }
+async function recountUserReviews(uid){
+  let s=await db.collection('reviews').where('uid','==',uid).get();
+  return s.size;
+}
 async function updateReviewStatsOnSubmit(){
   if(!currentUser||!db)return null;
   let ref=db.collection('users').doc(currentUser.uid);
   let snap=await ref.get();
   let p=snap.exists?snap.data():{};
-  let count=(p.reviewCount||0)+1;
-  // only increment if first review for this game was new - handled by caller with isNew flag
+  // Siempre el número real de reseñas en Firestore (evita desfase perfil vs ranking)
+  let count=await recountUserReviews(currentUser.uid);
   let today=dayKey(new Date());
   let last=p.reviewLastDay||'';
   let streak=p.reviewStreak||0;
-  if(last===today){
-    // same day, keep streak
-  }else{
+  if(last!==today){
     let yest=new Date();yest.setDate(yest.getDate()-1);
     if(last===dayKey(yest))streak=streak+1;
     else streak=1;
@@ -512,7 +514,7 @@ async function updateReviewStatsOnSubmit(){
     reviewCount:count,
     reviewStreak:streak,
     reviewLastDay:today,
-    reviewPoints:(p.reviewPoints||0)+10
+    reviewPoints:count*10
   };
   await ref.set(data,{merge:true});
   myProfile=Object.assign({},myProfile||{},data);
@@ -521,15 +523,18 @@ async function updateReviewStatsOnSubmit(){
 }
 async function refreshUserReviewCount(uid){
   try{
-    let s=await db.collection('reviews').where('uid','==',uid).get();
-    let count=s.size;
+    let count=await recountUserReviews(uid);
     await db.collection('users').doc(uid).set({reviewCount:count},{merge:true});
+    if(currentUser&&uid===currentUser.uid){
+      myProfile=Object.assign({},myProfile||{},{reviewCount:count});
+    }
+    userCache[uid]=Object.assign({},userCache[uid]||{},{reviewCount:count});
     return count;
   }catch(e){return 0}
 }
 
 async function submitReview(){if(!curGame)return;if(!currentUser){openAuth();return}if(!currentRating){showToast('¡Elige primero las estrellas!',true);return}let text=document.getElementById('revText').value.trim().slice(0,500);try{let rid=curGame.game_id+'_'+currentUser.uid;let prev=await db.collection('reviews').doc(rid).get();let isNew=!prev.exists;await db.collection('reviews').doc(rid).set({game_id:curGame.game_id,uid:currentUser.uid,name:(myProfile&&myProfile.name)||'Usuario',photo:(myProfile&&myProfile.photoURL)||'',rating:currentRating,text:text,createdAt:prev.exists&&prev.data().createdAt?prev.data().createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});if(isNew){let st=await updateReviewStatsOnSubmit();let rank=getReviewRank(st&&st.reviewCount);showToast('¡Reseña enviada! '+rank.icon+' '+rank.name+(st&&st.reviewStreak>1?' · Racha '+st.reviewStreak+' días':''))}else{showToast('¡Reseña actualizada!')}await loadReviews(curGame.game_id,true)}catch(e){console.log(e);showToast('Error al enviar la reseña.',true)}}
-async function delReview(id){if(!confirm('¿Eliminar esta reseña?'))return;try{await db.collection('reviews').doc(id).delete();if(curGame)loadReviews(curGame.game_id)}catch(e){showToast('No se pudo eliminar',true)}}
+async function delReview(id){if(!confirm('¿Eliminar esta reseña?'))return;try{let doc=await db.collection('reviews').doc(id).get();let uid=doc.exists?doc.data().uid:null;await db.collection('reviews').doc(id).delete();if(uid)await refreshUserReviewCount(uid);if(curGame)loadReviews(curGame.game_id);showToast('Reseña eliminada')}catch(e){showToast('No se pudo eliminar',true)}}
 async function loadReviews(id,keep){let revs=[];if(fbReady){try{let sn=await db.collection('reviews').where('game_id','==',id).get();revs=sn.docs.map(d=>Object.assign({id:d.id},d.data({serverTimestamps:'estimate'})))}catch(e){console.log(e)}}revs.sort((a,b)=>tsMs(b.createdAt)-tsMs(a.createdAt));let total=revs.length,sum=revs.reduce((a,b)=>a+b.rating,0),avg=total?(sum/total).toFixed(1):'0.0';if(curGame&&curGame.game_id===id)curGame.rating_avg=avg;if(!keep){currentRating=0;document.getElementById('revText').value=''}let mine=currentUser?revs.find(r=>r.uid===currentUser.uid):null;if(mine&&!currentRating){currentRating=mine.rating;document.getElementById('revText').value=mine.text||''}renderStarInput();document.getElementById('reviewLoginPrompt').style.display=currentUser?'none':'block';document.getElementById('reviewFormWrap').style.display=currentUser?'block':'none';document.getElementById('rateAvgTxt').innerText=avg;document.getElementById('rateCount').innerText=total+' reseñas';let sh='';for(let i=1;i<=5;i++)sh+=`<span style="color:${i<=Math.round(avg)?'#eab308':'var(--border-color)'};">${starSvg(16)}</span>`;document.getElementById('rateStars').innerHTML=sh;let counts=[0,0,0,0,0];revs.forEach(r=>counts[r.rating-1]++);let bh='';for(let i=4;i>=0;i--){let pct=total?(counts[i]/total*100):0;bh+=`<div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text-muted);"><span>${i+1}</span><div style="flex:1;height:6px;background:var(--border-color);border-radius:3px;overflow:hidden;"><div style="height:100%;background:var(--accent);border-radius:3px;width:${pct}%"></div></div></div>`}document.getElementById('rateBars').innerHTML=bh;document.getElementById('reviewList').innerHTML=revs.map(r=>`<div style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;padding:16px;"><div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">${avatarHTML(r.name,r.photo,32)}<div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:13px;cursor:pointer;" onclick="viewUserProfile('${escapeHTML(r.uid||'')}')">${escapeHTML(r.name||'Usuario')}${userBadgesHTML(r.uid,userCache[r.uid])}</div><div style="font-size:10px;color:var(--text-muted);">${fmtDate(r.createdAt)}</div></div><span style="color:#eab308;display:flex;gap:2px;">${Array(Math.max(0,Math.min(5,Number(r.rating)||0))).fill(starSvg(12)).join('')}</span>${(currentUser&&(currentUser.uid===r.uid||isAdmin()))?`<button class="msg-del" onclick="delReview('${escapeHTML(r.id)}')">✕</button>`:''}</div><div style="font-size:12px;color:var(--text-muted);line-height:1.6;">${escapeHTML(r.text||'')}</div></div>`).join('')||'<div style="text-align:center;color:var(--text-muted);font-size:12px;padding:24px 0;">Aún no hay reseñas.</div>'}
 function updateChatInput(){let i=document.getElementById('chatInput');if(!i)return;i.readOnly=!currentUser;i.placeholder=currentUser?'Escribe un mensaje...':'Inicia sesión para chatear'}
 function setChatBadge(on){let el=document.querySelector('.bnav-item[data-nav="chat"]');if(!el)return;let dot=el.querySelector('.chat-dot');if(on){if(!dot){dot=document.createElement('span');dot.className='chat-dot';el.appendChild(dot)}dot.style.display='block'}else if(dot)dot.style.display='none'}
@@ -773,15 +778,35 @@ function renderRanking(mode){
 async function loadReviewerRanking(){
   let list=document.getElementById('rankList');if(!list||!db)return;
   try{
-    let s=await db.collection('users').orderBy('reviewCount','desc').limit(30).get();
-    let rows=s.docs.map(function(d){return Object.assign({uid:d.id},d.data())}).filter(function(u){return (u.reviewCount||0)>0});
-    if(!rows.length){
-      // fallback: aggregate from reviews
-      let all=await db.collection('reviews').get();
-      let map={};
-      all.docs.forEach(function(d){let u=d.data().uid;if(!u)return;if(!map[u])map[u]={uid:u,name:d.data().name||'Usuario',photo:d.data().photo||'',reviewCount:0};map[u].reviewCount++});
-      rows=Object.keys(map).map(function(k){return map[k]}).sort(function(a,b){return b.reviewCount-a.reviewCount}).slice(0,30);
-    }
+    // Contar siempre desde la colección reviews (fuente de verdad)
+    let all=await db.collection('reviews').get();
+    let map={};
+    all.docs.forEach(function(d){
+      let r=d.data();let u=r.uid;if(!u)return;
+      if(!map[u])map[u]={uid:u,name:r.name||'Usuario',photo:r.photo||'',reviewCount:0};
+      map[u].reviewCount++;
+      if(r.name)map[u].name=r.name;
+      if(r.photo)map[u].photo=r.photo;
+    });
+    // Enriquecer con perfil (racha, badges, nombre actual) y sincronizar reviewCount
+    let rows=Object.keys(map).map(function(k){return map[k]}).sort(function(a,b){return b.reviewCount-a.reviewCount}).slice(0,30);
+    await Promise.all(rows.map(async function(u){
+      try{
+        let s=await db.collection('users').doc(u.uid).get();
+        if(s.exists){
+          let p=s.data();
+          u.name=p.name||u.name;
+          u.photoURL=p.photoURL||u.photo;
+          u.verified=!!p.verified;
+          u.badges=p.badges||[];
+          u.reviewStreak=p.reviewStreak||0;
+          // sync si está desfasado
+          if((p.reviewCount||0)!==u.reviewCount){
+            db.collection('users').doc(u.uid).set({reviewCount:u.reviewCount},{merge:true}).catch(function(){});
+          }
+        }
+      }catch(e){}
+    }));
     rows.forEach(function(u){userCache[u.uid]=Object.assign({},userCache[u.uid]||{},u)});
     list.innerHTML=rows.map(function(u,i){
       let medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';

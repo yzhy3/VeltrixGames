@@ -124,7 +124,7 @@ function viewPanel(u){
     /* ADMINS (creator) */
     '<div class="panel" id="p-users">'+
     '<h2>Usuarios</h2>'+
-    '<div class="card"><input id="userSearch" placeholder="Buscar por nombre, email o UID" oninput="filterUsers()"><div id="usersList"><p class="muted">Cargando…</p></div></div></div>'+(isCreator?'<div class="panel" id="p-admins"><h2>Gestionar admins</h2><div class="card"><label>UID del nuevo admin</label><input id="adminUid" placeholder="UID"><button class="w" onclick="addAdmin()">Agregar admin</button><div id="adminsList" style="margin-top:14px"></div></div></div>':'');
+    '<div class="card"><input id="userSearch" placeholder="Buscar por nombre, email o UID" oninput="filterUsers()">'+'<button class="sec" style="margin:8px 0;padding:8px 12px;font-size:12px" onclick="syncAllReviewCounts()">Sincronizar conteo de reseñas</button>'+'<div id="usersList"><p class="muted">Cargando…</p></div></div></div>'+(isCreator?'<div class="panel" id="p-admins"><h2>Gestionar admins</h2><div class="card"><label>UID del nuevo admin</label><input id="adminUid" placeholder="UID"><button class="w" onclick="addAdmin()">Agregar admin</button><div id="adminsList" style="margin-top:14px"></div></div></div>':'');
 
   loadList();
   loadSettings();
@@ -323,6 +323,7 @@ function filterUsers(){
     if(u.isCreator)tags+='<span class="badge cr">CREADOR</span> ';
     else if(u.isAdmin)tags+='<span class="badge">ADMIN</span> ';
     if(u.banned)tags+='<span class="badge off">BAN</span> ';
+    if(u.reviewCount)tags+='<span class="badge" style="background:#334155">'+u.reviewCount+' reseñas</span> ';
     var extra=Array.isArray(u.badges)?u.badges:[];
     var badgeColors={vip:'#a855f7',mod:'#10b981',helper:'#3b82f6',partner:'#f59e0b',pro:'#ec4899',og:'#f97316',staff:'#6366f1'};
     extra.forEach(function(k){if(badgeColors[k])tags+='<span class="badge" style="background:'+badgeColors[k]+'">'+k.toUpperCase()+'</span> ';});
@@ -359,6 +360,35 @@ function editUserBadges(uid){
     loadUsers();
   }).catch(function(e){console.log(e);toast('Error al guardar insignias',1)});
 }
+function syncAllReviewCounts(){
+  toast('Sincronizando…');
+  db.collection('reviews').get().then(function(s){
+    var map={};
+    s.docs.forEach(function(d){var u=d.data().uid;if(!u)return;map[u]=(map[u]||0)+1});
+    var uids=Object.keys(map);
+    var i=0;
+    function next(){
+      if(i>=uids.length){toast('Sincronizados '+uids.length+' usuarios');loadUsers();return}
+      var uid=uids[i++];
+      db.collection('users').doc(uid).set({reviewCount:map[uid]},{merge:true}).then(next).catch(next);
+    }
+    // also zero users with stale counts not in map - skip for safety
+    next();
+  }).catch(function(e){console.log(e);toast('Error sync',1)});
+}
+function deleteUser(uid, name){
+  if(!uid)return;
+  if(!confirm('¿Eliminar usuario '+(name||uid)+' de Firestore?\n(Esto no borra Auth; hazlo en Firebase Console → Authentication si hace falta)'))return;
+  var batchTasks = [];
+  batchTasks.push(db.collection('users').doc(uid).delete().catch(function(){}));
+  batchTasks.push(db.collection('admins').doc(uid).delete().catch(function(){}));
+  batchTasks.push(db.collection('bans').doc(uid).delete().catch(function(){}));
+  batchTasks.push(db.collection('moderations').doc(uid).delete().catch(function(){}));
+  Promise.all(batchTasks).then(function(){
+    toast('Usuario eliminado de datos');
+    loadUsers();
+  }).catch(function(e){console.log(e);toast('Error al eliminar',1)});
+}
 function toggleVerified(uid, isVer){
   var next = !(isVer===true || isVer==='true');
   db.collection('users').doc(uid).set({verified: next}, {merge:true}).then(function(){
@@ -383,6 +413,7 @@ function resetGame(){
   ['f_title','f_dev','f_cat','f_img','f_apk','f_desc','f_log','f_sec','f_badge','f_label','f_media'].forEach(function(id){var el=$(id);if(el)el.value=''});
   if($('f_color'))$('f_color').value='#EF4444';if($('f_active'))$('f_active').checked=true;
 }
+
 function saveGame(){
   var title=$('f_title').value.trim(),img=$('f_img').value.trim(),apk=$('f_apk').value.trim();
   if(!title||!img||!apk)return toast('Título, imagen y APK obligatorios',1);
