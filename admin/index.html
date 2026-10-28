@@ -338,7 +338,7 @@ function filterUsers(){
     actions+='<button class="sec" style="padding:8px 10px;font-size:11px;background:#1D9BF0" onclick="toggleVerified(\''+esc(u.uid)+'\','+(u.verified?'true':'false')+')">'+(u.verified?'Quitar ✓':'Verificar ✓')+'</button>';
     actions+='<button class="sec" style="padding:8px 10px;font-size:11px" onclick="editUserBadges(\''+esc(u.uid)+'\')">Insignias</button>';
     return '<div class="card" style="padding:12px"><div><b style="font-size:14px">'+esc(u.name||'Sin nombre')+'</b> '+tags+
-      '<div class="muted" style="font-size:12px;margin-top:2px">'+esc(u.email||'sin email')+'</div>'+
+      '<div class="muted" style="font-size:12px;margin-top:2px">'+esc(u.email||'sin email')+'</div>'+'<div class="muted" style="font-size:11px;margin-top:2px">Registro: '+(u.createdAt&&u.createdAt.toDate?u.createdAt.toDate().toLocaleDateString('es-ES'):'—')+' · UID: '+esc(u.uid)+'</div>'+
       '<code style="margin:6px 0 0;font-size:10px">'+esc(u.uid)+'</code>'+
       (u.bio?'<div class="muted" style="font-size:12px;margin-top:4px">'+esc(u.bio)+'</div>':'')+
       '</div>'+(actions?'<div class="row" style="margin-top:10px">'+actions+'</div>':'')+'</div>';
