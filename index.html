@@ -97,9 +97,40 @@ nav.bnav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:var(--nav-
 .msg{display:flex;gap:12px;padding:2px 12px;position:relative}.msg:hover{background:rgba(255,255,255,0.03)}.msg-av{width:36px;flex-shrink:0;margin-top:8px}.msg.grouped .msg-av{margin-top:0}.msg-main{flex:1;min-width:0}.msg-head{display:flex;align-items:baseline;gap:8px;margin-top:8px}.msg-head b{font-size:14px}.msg-time{font-size:10px;color:var(--text-muted)}.msg-text{font-size:14px;line-height:1.4;word-break:break-word;white-space:pre-wrap;-webkit-user-select:text;user-select:text}.msg-del{background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;align-self:flex-start;padding:4px}.badge-admin{font-size:9px;font-weight:900;background:var(--accent);color:#fff;border-radius:4px;padding:1px 5px}
 .fld{width:100%;background:var(--bg-body);border:1px solid var(--border-color);border-radius:12px;padding:12px;color:var(--text-main);font-size:14px;margin-bottom:12px;outline:none}
 .btn-main{width:100%;padding:13px;border-radius:12px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;border:none;cursor:pointer}
+
+/* Araña colgante */
+#veltrix-spider{position:fixed;top:0;right:18%;z-index:90;width:48px;pointer-events:auto;user-select:none;-webkit-tap-highlight-color:transparent}
+#veltrix-spider .sp-thread{display:block;width:2px;height:0;margin:0 auto;background:linear-gradient(to bottom,rgba(180,180,180,.15),rgba(200,200,200,.7));transform-origin:top center;transition:height .05s linear}
+#veltrix-spider .sp-body{display:block;width:40px;height:40px;margin:0 auto;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));transform-origin:top center;animation:sp-swing 3.2s ease-in-out infinite}
+#veltrix-spider .sp-body svg{width:100%;height:100%;display:block}
+#veltrix-spider.sp-fall .sp-body{animation:sp-drop 1.1s ease-in forwards}
+#veltrix-spider.sp-hide{opacity:0;pointer-events:none;transition:opacity .4s}
+@keyframes sp-swing{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+@keyframes sp-drop{0%{transform:translateY(0) rotate(0)}40%{transform:translateY(40vh) rotate(120deg)}100%{transform:translateY(110vh) rotate(360deg);opacity:0}}
+@media (max-width:480px){#veltrix-spider{right:8%;width:40px}#veltrix-spider .sp-body{width:34px;height:34px}}
+
 </style>
 </head>
 <body>
+
+<div id="veltrix-spider" title="Araña" aria-hidden="true">
+  <span class="sp-thread" id="spThread"></span>
+  <span class="sp-body" id="spBody" onclick="spiderDrop()">
+    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="32" cy="38" rx="14" ry="12" fill="#1a1a1a"/>
+      <circle cx="32" cy="24" r="11" fill="#222"/>
+      <circle cx="27" cy="22" r="2.2" fill="#ef4444"/>
+      <circle cx="37" cy="22" r="2.2" fill="#ef4444"/>
+      <path d="M18 34 Q8 28 4 18" stroke="#111" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <path d="M16 40 Q6 40 2 34" stroke="#111" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <path d="M18 46 Q10 52 6 58" stroke="#111" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <path d="M46 34 Q56 28 60 18" stroke="#111" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <path d="M48 40 Q58 40 62 34" stroke="#111" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <path d="M46 46 Q54 52 58 58" stroke="#111" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    </svg>
+  </span>
+</div>
+
 <div id="globalLoader" style="display:none; position:fixed; top:0; right:0; bottom:0; left:0; background:var(--bg-body); z-index:9999; align-items:center; justify-content:center;"><div class="skeleton" style="width:50px; height:50px; border-radius:50%;"></div></div>
 <div id="toast">Mensaje</div>
 <button id="backToTop" onclick="window.scrollTo(0,0)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg></button>
@@ -464,7 +495,7 @@ async function viewUserProfile(uid){
     body.innerHTML=`
       <div style="display:flex;justify-content:center;margin-bottom:12px;">${avatarHTML(name,p.photoURL,90)}</div>
       <div style="text-align:center;margin-bottom:16px;">
-        <div style="font-size:18px;font-weight:900;color:var(--text-main);display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;">${escapeHTML(name)}${userBadgesHTML(uid,p)}</div>
+        <div style="font-size:18px;font-weight:900;color:var(--text-main);display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;">${escapeHTML(name)}${userBadgesHTML(uid,p,{textOnly:true})}</div>
         ${banned?'<div style="margin-top:6px;font-size:11px;color:var(--danger);font-weight:700;">Cuenta restringida</div>':''}
         <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">${p.createdAt?'Se registró: <b>'+fmtJoined(p.createdAt)+'</b><br>':''}Reseñas: <b>${revCount}</b></div><div style="margin-top:8px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">${reviewRankHTML(revCount)}${(p.reviewStreak>1)?'<span style="font-size:12px;color:#f97316;font-weight:700;">🔥 Racha '+p.reviewStreak+'</span>':''}</div>
       </div>
@@ -491,7 +522,7 @@ async function adminUnbanFromProfile(uid){
   try{await db.collection('bans').doc(uid).delete();showToast('Ban eliminado');viewUserProfile(uid)}catch(e){showToast('Error',true)}
 }
 
-async function renderProfile(){let c=document.getElementById('profileBox');if(!fbReady){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;">Firebase no está configurado.</p>';return}if(!currentUser){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:12px;">Inicia sesión para ver tu perfil.</p><button class="btn-main" onclick="openAuth()">Iniciar sesión</button>';return}let p=myProfile||{};let joined=fmtJoined(p.createdAt);c.innerHTML=`<div style="display:flex;justify-content:center;margin-bottom:8px;">${avatarHTML(p.name,p.photoURL,84)}</div><div style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:16px;">${escapeHTML(currentUser.email||p.email||'')}${userBadgesHTML(currentUser.uid,p)}<br>${joined?'Se registró: <b>'+joined+'</b><br>':''}Reseñas escritas: <b id="pRevCount">0</b><div id="pRankBox" style="margin-top:8px;"></div></div><input class="fld" id="pName" placeholder="Nombre" maxlength="30" value="${escapeHTML(p.name||'')}"><input class="fld" id="pPhoto" placeholder="Foto (enlace https://...)" value="${escapeHTML(p.photoURL||'')}"><textarea class="fld" id="pBio" placeholder="Sobre ti (máx. 160)" maxlength="160" style="min-height:70px;">${escapeHTML(p.bio||'')}</textarea><button class="btn-main" onclick="saveProfile()">Guardar perfil</button>${isAdmin()?'<a href="/admin/" class="btn-main" style="display:block;text-align:center;text-decoration:none;margin-top:8px;background:'+(isCreator()?'#eab308;color:#000':'#3B82F6')+';">'+(isCreator()?'Panel Creador':'Panel Admin')+'</a>':''}<button class="btn-main" style="background:transparent;border:1px solid var(--border-color);color:var(--text-main);margin-top:8px;" onclick="logout()">Cerrar sesión</button>`;try{let cnt=await refreshUserReviewCount(currentUser.uid);let e=document.getElementById('pRevCount');if(e)e.innerText=cnt;let rb=document.getElementById('pRankBox');if(rb){let st=(myProfile&&myProfile.reviewStreak)||0;rb.innerHTML=reviewRankHTML(cnt)+(st>1?' <span style="font-size:12px;color:#f97316;font-weight:700;margin-left:6px;">🔥 Racha '+st+' días</span>':'')}}catch(e){}}
+async function renderProfile(){let c=document.getElementById('profileBox');if(!fbReady){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;">Firebase no está configurado.</p>';return}if(!currentUser){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:12px;">Inicia sesión para ver tu perfil.</p><button class="btn-main" onclick="openAuth()">Iniciar sesión</button>';return}let p=myProfile||{};let joined=fmtJoined(p.createdAt);c.innerHTML=`<div style="display:flex;justify-content:center;margin-bottom:8px;">${avatarHTML(p.name,p.photoURL,84)}</div><div style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:16px;">${escapeHTML(currentUser.email||p.email||'')}${userBadgesHTML(currentUser.uid,p,{textOnly:true})}<br>${joined?'Se registró: <b>'+joined+'</b><br>':''}Reseñas escritas: <b id="pRevCount">0</b><div id="pRankBox" style="margin-top:8px;"></div></div><input class="fld" id="pName" placeholder="Nombre" maxlength="30" value="${escapeHTML(p.name||'')}"><input class="fld" id="pPhoto" placeholder="Foto (enlace https://...)" value="${escapeHTML(p.photoURL||'')}"><textarea class="fld" id="pBio" placeholder="Sobre ti (máx. 160)" maxlength="160" style="min-height:70px;">${escapeHTML(p.bio||'')}</textarea><button class="btn-main" onclick="saveProfile()">Guardar perfil</button>${isAdmin()?'<a href="/admin/" class="btn-main" style="display:block;text-align:center;text-decoration:none;margin-top:8px;background:'+(isCreator()?'#eab308;color:#000':'#3B82F6')+';">'+(isCreator()?'Panel Creador':'Panel Admin')+'</a>':''}<button class="btn-main" style="background:transparent;border:1px solid var(--border-color);color:var(--text-main);margin-top:8px;" onclick="logout()">Cerrar sesión</button>`;try{let cnt=await refreshUserReviewCount(currentUser.uid);let e=document.getElementById('pRevCount');if(e)e.innerText=cnt;let rb=document.getElementById('pRankBox');if(rb){let st=(myProfile&&myProfile.reviewStreak)||0;rb.innerHTML=reviewRankHTML(cnt)+(st>1?' <span style="font-size:12px;color:#f97316;font-weight:700;margin-left:6px;">🔥 Racha '+st+' días</span>':'')}}catch(e){}}
 async function saveProfile(){let name=document.getElementById('pName').value.trim(),photo=document.getElementById('pPhoto').value.trim(),bio=document.getElementById('pBio').value.trim();if(name.length<2||name.length>30){showToast('El nombre debe tener entre 2 y 30 letras.',true);return}if(photo&&!/^https:\/\//.test(photo)){showToast('La foto debe ser un enlace https.',true);return}try{await db.collection('users').doc(currentUser.uid).set({name:name,photoURL:photo,bio:bio.slice(0,160)},{merge:true});myProfile=Object.assign({},myProfile,{name:name,photoURL:photo,bio:bio});userCache[currentUser.uid]=Object.assign({},userCache[currentUser.uid]||{},{name:name,photoURL:photo,bio:bio});updateAuthUI();renderProfile();if(typeof _lastChatList!=='undefined'&&_lastChatList.length)renderChat(_lastChatList);showToast('Perfil guardado')}catch(e){console.log(e);showToast('No se pudo guardar el perfil',true)}}
 
 
@@ -564,7 +595,7 @@ async function refreshUserReviewCount(uid){
 
 async function submitReview(){if(!curGame)return;if(!currentUser){openAuth();return}if(!currentRating){showToast('¡Elige primero las estrellas!',true);return}let text=document.getElementById('revText').value.trim().slice(0,500);try{let rid=curGame.game_id+'_'+currentUser.uid;let prev=await db.collection('reviews').doc(rid).get();let isNew=!prev.exists;await db.collection('reviews').doc(rid).set({game_id:curGame.game_id,uid:currentUser.uid,name:(myProfile&&myProfile.name)||'Usuario',photo:(myProfile&&myProfile.photoURL)||'',rating:currentRating,text:text,createdAt:prev.exists&&prev.data().createdAt?prev.data().createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});if(isNew){let st=await updateReviewStatsOnSubmit();let rank=getReviewRank(st&&st.reviewCount);showToast('¡Reseña enviada! '+rank.icon+' '+rank.name+(st&&st.reviewStreak>1?' · Racha '+st.reviewStreak+' días':''))}else{showToast('¡Reseña actualizada!')}await loadReviews(curGame.game_id,true)}catch(e){console.log(e);showToast('Error al enviar la reseña.',true)}}
 async function delReview(id){if(!confirm('¿Eliminar esta reseña?'))return;try{let doc=await db.collection('reviews').doc(id).get();let uid=doc.exists?doc.data().uid:null;await db.collection('reviews').doc(id).delete();if(uid)await refreshUserReviewCount(uid);if(curGame)loadReviews(curGame.game_id);showToast('Reseña eliminada')}catch(e){showToast('No se pudo eliminar',true)}}
-async function loadReviews(id,keep){let revs=[];if(fbReady){try{let sn=await db.collection('reviews').where('game_id','==',id).get();revs=sn.docs.map(d=>Object.assign({id:d.id},d.data({serverTimestamps:'estimate'})))}catch(e){console.log(e)}}revs.sort((a,b)=>tsMs(b.createdAt)-tsMs(a.createdAt));let total=revs.length,sum=revs.reduce((a,b)=>a+b.rating,0),avg=total?(sum/total).toFixed(1):'0.0';if(curGame&&curGame.game_id===id)curGame.rating_avg=avg;if(!keep){currentRating=0;document.getElementById('revText').value=''}let mine=currentUser?revs.find(r=>r.uid===currentUser.uid):null;if(mine&&!currentRating){currentRating=mine.rating;document.getElementById('revText').value=mine.text||''}renderStarInput();document.getElementById('reviewLoginPrompt').style.display=currentUser?'none':'block';document.getElementById('reviewFormWrap').style.display=currentUser?'block':'none';document.getElementById('rateAvgTxt').innerText=avg;document.getElementById('rateCount').innerText=total+' reseñas';let sh='';for(let i=1;i<=5;i++)sh+=`<span style="color:${i<=Math.round(avg)?'#eab308':'var(--border-color)'};">${starSvg(16)}</span>`;document.getElementById('rateStars').innerHTML=sh;let counts=[0,0,0,0,0];revs.forEach(r=>counts[r.rating-1]++);let bh='';for(let i=4;i>=0;i--){let pct=total?(counts[i]/total*100):0;bh+=`<div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text-muted);"><span>${i+1}</span><div style="flex:1;height:6px;background:var(--border-color);border-radius:3px;overflow:hidden;"><div style="height:100%;background:var(--accent);border-radius:3px;width:${pct}%"></div></div></div>`}document.getElementById('rateBars').innerHTML=bh;document.getElementById('reviewList').innerHTML=revs.map(r=>`<div style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;padding:16px;"><div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">${avatarHTML(r.name,r.photo,32)}<div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:13px;cursor:pointer;" onclick="viewUserProfile('${escapeHTML(r.uid||'')}')">${escapeHTML(r.name||'Usuario')}${userBadgesHTML(r.uid,userCache[r.uid])}</div><div style="font-size:10px;color:var(--text-muted);">${fmtDate(r.createdAt)}</div></div><span style="color:#eab308;display:flex;gap:2px;">${Array(Math.max(0,Math.min(5,Number(r.rating)||0))).fill(starSvg(12)).join('')}</span>${(currentUser&&(currentUser.uid===r.uid||isAdmin()))?`<button class="msg-del" onclick="delReview('${escapeHTML(r.id)}')">✕</button>`:''}</div><div style="font-size:12px;color:var(--text-muted);line-height:1.6;">${escapeHTML(r.text||'')}</div></div>`).join('')||'<div style="text-align:center;color:var(--text-muted);font-size:12px;padding:24px 0;">Aún no hay reseñas.</div>'}
+async function loadReviews(id,keep){let revs=[];if(fbReady){try{let sn=await db.collection('reviews').where('game_id','==',id).get();revs=sn.docs.map(d=>Object.assign({id:d.id},d.data({serverTimestamps:'estimate'})))}catch(e){console.log(e)}}revs.sort((a,b)=>tsMs(b.createdAt)-tsMs(a.createdAt));let total=revs.length,sum=revs.reduce((a,b)=>a+b.rating,0),avg=total?(sum/total).toFixed(1):'0.0';if(curGame&&curGame.game_id===id)curGame.rating_avg=avg;if(!keep){currentRating=0;document.getElementById('revText').value=''}let mine=currentUser?revs.find(r=>r.uid===currentUser.uid):null;if(mine&&!currentRating){currentRating=mine.rating;document.getElementById('revText').value=mine.text||''}renderStarInput();document.getElementById('reviewLoginPrompt').style.display=currentUser?'none':'block';document.getElementById('reviewFormWrap').style.display=currentUser?'block':'none';document.getElementById('rateAvgTxt').innerText=avg;document.getElementById('rateCount').innerText=total+' reseñas';let sh='';for(let i=1;i<=5;i++)sh+=`<span style="color:${i<=Math.round(avg)?'#eab308':'var(--border-color)'};">${starSvg(16)}</span>`;document.getElementById('rateStars').innerHTML=sh;let counts=[0,0,0,0,0];revs.forEach(r=>counts[r.rating-1]++);let bh='';for(let i=4;i>=0;i--){let pct=total?(counts[i]/total*100):0;bh+=`<div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text-muted);"><span>${i+1}</span><div style="flex:1;height:6px;background:var(--border-color);border-radius:3px;overflow:hidden;"><div style="height:100%;background:var(--accent);border-radius:3px;width:${pct}%"></div></div></div>`}document.getElementById('rateBars').innerHTML=bh;document.getElementById('reviewList').innerHTML=revs.map(r=>`<div style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;padding:16px;"><div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">${avatarHTML(r.name,r.photo,32)}<div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:13px;cursor:pointer;" onclick="viewUserProfile('${escapeHTML(r.uid||'')}')">${escapeHTML(r.name||'Usuario')}${userBadgesHTML(r.uid,userCache[r.uid],{textOnly:true})}</div><div style="font-size:10px;color:var(--text-muted);">${fmtDate(r.createdAt)}</div></div><span style="color:#eab308;display:flex;gap:2px;">${Array(Math.max(0,Math.min(5,Number(r.rating)||0))).fill(starSvg(12)).join('')}</span>${(currentUser&&(currentUser.uid===r.uid||isAdmin()))?`<button class="msg-del" onclick="delReview('${escapeHTML(r.id)}')">✕</button>`:''}</div><div style="font-size:12px;color:var(--text-muted);line-height:1.6;">${escapeHTML(r.text||'')}</div></div>`).join('')||'<div style="text-align:center;color:var(--text-muted);font-size:12px;padding:24px 0;">Aún no hay reseñas.</div>'}
 function updateChatInput(){let i=document.getElementById('chatInput');if(!i)return;i.readOnly=!currentUser;i.placeholder=currentUser?'Escribe un mensaje...':'Inicia sesión para chatear'}
 function setChatBadge(on){let el=document.querySelector('.bnav-item[data-nav="chat"]');if(!el)return;let dot=el.querySelector('.chat-dot');if(on){if(!dot){dot=document.createElement('span');dot.className='chat-dot';el.appendChild(dot)}dot.style.display='block'}else if(dot)dot.style.display='none'}
 function markChatSeen(){lastChatSeen=Date.now();try{localStorage.setItem('chatSeen',String(lastChatSeen))}catch(e){}setChatBadge(false)}
@@ -844,7 +875,7 @@ async function loadReviewerRanking(){
       return '<div class="card" style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:8px;cursor:pointer;" onclick="viewUserProfile(\''+escapeHTML(u.uid)+'\')">'+
         '<div style="font-size:18px;font-weight:900;width:36px;text-align:center;">'+medal+'</div>'+
         avatarHTML(u.name,u.photoURL||u.photo,48)+
-        '<div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:14px;">'+escapeHTML(u.name||'Usuario')+' '+userBadgesHTML(u.uid,u)+'</div>'+
+        '<div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:14px;">'+escapeHTML(u.name||'Usuario')+' '+userBadgesHTML(u.uid,u,{textOnly:true})+'</div>'+
         '<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">'+reviewRankHTML(u.reviewCount||0)+
         '<span style="font-size:11px;color:var(--text-muted);">'+(u.reviewCount||0)+' reseñas</span>'+
         (streak>1?'<span style="font-size:11px;color:#f97316;font-weight:700;">🔥 Racha '+streak+'</span>':'')+
@@ -898,5 +929,41 @@ function openMsgMenu(id,e){
 async function editMsg(id){let m=document.getElementById('msgMenu');if(m)m.remove();let el=document.querySelector('[data-id="'+id+'"]');let old=el?el.getAttribute('data-text'):'';let neu=prompt('Editar mensaje:',old||'');if(neu===null||!neu.trim())return;try{await db.collection('chat').doc(id).update({text:neu.trim().slice(0,500),edited:true});showToast('Mensaje editado')}catch(e){showToast('No se pudo editar',true)}}
 async function delMsgConfirm(id){let m=document.getElementById('msgMenu');if(m)m.remove();if(!confirm('¿Eliminar este mensaje?'))return;await delMsg(id)}
 </script>
+
+<script>
+(function(){
+  var maxLen=Math.min(window.innerHeight*0.28, 180);
+  var len=20, dir=1, dropped=false;
+  function tick(){
+    if(dropped)return;
+    var thread=document.getElementById('spThread');
+    if(!thread)return;
+    len+=dir*0.7;
+    if(len>=maxLen)dir=-1;
+    if(len<=20)dir=1;
+    thread.style.height=len+'px';
+    requestAnimationFrame(tick);
+  }
+  window.spiderDrop=function(){
+    if(dropped)return;
+    dropped=true;
+    var box=document.getElementById('veltrix-spider');
+    if(!box)return;
+    box.classList.add('sp-fall');
+    setTimeout(function(){
+      box.classList.add('sp-hide');
+      setTimeout(function(){
+        box.classList.remove('sp-fall','sp-hide');
+        dropped=false;len=20;dir=1;
+        var t=document.getElementById('spThread');if(t)t.style.height='20px';
+        requestAnimationFrame(tick);
+      }, 8000);
+    }, 1100);
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){requestAnimationFrame(tick)});
+  else requestAnimationFrame(tick);
+})();
+</script>
+
 </body>
 </html>

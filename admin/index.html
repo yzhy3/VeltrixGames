@@ -200,8 +200,9 @@ function unbanUser(uid){
 function loadReports(){
   db.collection('reports').orderBy('createdAt','desc').limit(50).get().then(function(s){
     var box=$('reportsList');if(!box)return;
-    if(!s.docs.length){box.innerHTML='<p class="muted">Sin reportes.</p>';return}
-    box.innerHTML=s.docs.map(function(d){
+    var docs=s.docs.filter(function(d){var x=d.data();return x.status!=='closed'});
+    if(!docs.length){box.innerHTML='<p class="muted">Sin reportes abiertos.</p>';return}
+    box.innerHTML=docs.map(function(d){
       var x=d.data();
       var when=x.createdAt&&x.createdAt.toDate?x.createdAt.toDate().toLocaleString():'';
       return '<div class="card"><div class="row" style="justify-content:space-between"><b style="font-size:13px">'+(x.type||'?').toUpperCase()+'</b><span class="muted" style="font-size:11px">'+esc(when)+'</span></div>'+
@@ -220,7 +221,17 @@ function loadReports(){
   });
 }
 function closeReport(id){
-  db.collection('reports').doc(id).update({status:'closed'}).then(function(){toast('Cerrado');loadReports()}).catch(function(){toast('Error',1)});
+  if(!id){toast('ID inválido',1);return}
+  if(!confirm('¿Cerrar y quitar este reporte de la lista?'))return;
+  db.collection('reports').doc(id).delete()
+    .then(function(){toast('Reporte cerrado');loadReports()})
+    .catch(function(e){
+      console.log(e);
+      // fallback: marcar closed si delete falla
+      db.collection('reports').doc(id).set({status:'closed',closedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})
+        .then(function(){toast('Reporte cerrado');loadReports()})
+        .catch(function(e2){console.log(e2);toast('Error al cerrar: '+(e2.message||''),1)});
+    });
 }
 function loadBans(){
   db.collection('bans').get().then(function(s){
