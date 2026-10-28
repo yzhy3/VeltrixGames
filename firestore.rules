@@ -56,18 +56,6 @@ service cloud.firestore {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
       allow write: if signedIn();
     }
-    match /dms/{chatId} {
-      allow read, write: if signedIn();
-      match /messages/{msgId} {
-        allow read: if signedIn();
-        allow create: if signedIn() && notBanned()
-          && request.resource.data.uid == request.auth.uid
-          && request.resource.data.text is string
-          && request.resource.data.text.size() > 0
-          && request.resource.data.text.size() <= 500;
-        allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
-      }
-    }
     match /reports/{id} {
       allow read: if isAdmin();
       allow create: if signedIn()

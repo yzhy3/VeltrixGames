@@ -114,7 +114,6 @@ nav.bnav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:var(--nav-
 <nav class="flex-col" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
 <a href="#" onclick="showPage('home');toggleSidebar();return false" data-nav="home" class="sb-item active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Inicio</a>
 <a href="#" onclick="showPage('chat');toggleSidebar();return false" data-nav="chat" class="sb-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Chat Global</a>
-<a href="#" onclick="showPage('dmlist');toggleSidebar();return false" data-nav="dmlist" class="sb-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Mensajes</a>
 <a href="#" onclick="showPage('rank');toggleSidebar();return false" data-nav="rank" class="sb-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg> Ranking</a>
 <a href="#" onclick="showPage('profile');toggleSidebar();return false" data-nav="profile" class="sb-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Mi Perfil</a>
 <a href="#" onclick="showPage('about');toggleSidebar();return false" data-nav="about" class="sb-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Acerca de</a>
@@ -176,31 +175,12 @@ nav.bnav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:var(--nav-
     <div style="display:flex;gap:8px;margin-bottom:14px;">
       <button class="btn-main" id="rankTabDl" style="flex:1;padding:10px;font-size:12px;" onclick="renderRanking('downloads')">Más descargados</button>
       <button class="btn-main" id="rankTabRt" style="flex:1;padding:10px;font-size:12px;background:var(--card-bg);color:var(--text-main);border:1px solid var(--border-color);" onclick="renderRanking('rating')">Mejor valorados</button>
+      <button class="btn-main" id="rankTabRv" style="flex:1;padding:10px;font-size:12px;background:var(--card-bg);color:var(--text-main);border:1px solid var(--border-color);" onclick="renderRanking('reviewers')">Top reseñadores</button>
     </div>
     <div id="rankList"></div>
   </div>
 </div>
 
-<div id="page-dmlist" class="page hidden">
-  <div style="margin-top:16px;">
-    <h2 style="font-size:18px;font-weight:900;margin-bottom:12px;">Mensajes privados</h2>
-    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Escribe a alguien desde su perfil o desde el chat (mantener pulsado → Mensaje privado).</p>
-    <div id="dmListBox"><p style="text-align:center;color:var(--text-muted);font-size:13px;">Cargando…</p></div>
-  </div>
-</div>
-<div id="page-dm" class="page hidden">
-  <div style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:16px;overflow:hidden;height:calc(100vh - 190px);height:calc(100dvh - 190px);margin-top:16px;display:flex;flex-direction:column;">
-    <div style="padding:12px 16px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:10px;">
-      <button onclick="showPage('dmlist')" style="background:none;border:none;color:var(--accent);font-weight:700;cursor:pointer;font-size:13px;">←</button>
-      <div id="dmTitle" style="font-weight:800;font-size:14px;flex:1;">Chat privado</div>
-    </div>
-    <div id="dmMsgs" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 0;"></div>
-    <div style="display:flex;gap:8px;padding:10px;border-top:1px solid var(--border-color);">
-      <input type="text" id="dmInput" class="fld" style="margin:0;flex:1;" maxlength="500" autocomplete="off" onkeydown="if(event.key==='Enter')sendDM()">
-      <button class="btn-main" style="width:auto;padding:0 18px;" onclick="sendDM()">Enviar</button>
-    </div>
-  </div>
-</div>
 <div id="page-profile" class="page hidden"><div id="profileBox" style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:16px;padding:20px;margin-top:16px;"></div></div>
 <div id="page-about" class="page hidden">
 <div style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:16px;padding:20px;margin-top:16px;text-align:center;display:flex;flex-direction:column;align-items:center;">
@@ -354,35 +334,45 @@ function openLightbox(url){document.getElementById('lightboxImg').src=url;docume
 function closeLightbox(){document.getElementById('lightbox').style.display='none'}
 function closeWelcome(){document.getElementById('welcomeModal').style.display='none'}
 window.addEventListener('scroll',function(){let b=document.getElementById('backToTop');if(window.scrollY>300)b.classList.add('show');else b.classList.remove('show')});
-document.addEventListener('DOMContentLoaded',()=>{var urlParams=new URLSearchParams(window.location.search);var redirectPath=urlParams.get('redirect');if(redirectPath){window.history.replaceState({},'',redirectPath)}var currentPath=window.location.pathname;var currentSearch=new URLSearchParams(window.location.search);var isGamePage=currentSearch.has('id')||currentPath.startsWith('/game/');var validPages=['/search','/chat','/profile','/request','/about','/rank','/dmlist','/dm'];if(isGamePage){document.getElementById('globalLoader').style.display='flex';document.querySelectorAll('.page').forEach(el=>el.classList.add('hidden'));initHome().then(()=>{let id=currentSearch.get('id')||currentPath.split('/')[2];openDetail(id).then(()=>{document.getElementById('globalLoader').style.display='none'})})}else if(validPages.includes(currentPath)){initHome().then(()=>{showPage(currentPath.replace('/',''))})}else{initHome()}});
+document.addEventListener('DOMContentLoaded',()=>{var urlParams=new URLSearchParams(window.location.search);var redirectPath=urlParams.get('redirect');if(redirectPath){window.history.replaceState({},'',redirectPath)}var currentPath=window.location.pathname;var currentSearch=new URLSearchParams(window.location.search);var isGamePage=currentSearch.has('id')||currentPath.startsWith('/game/');var validPages=['/search','/chat','/profile','/request','/about','/rank'];if(isGamePage){document.getElementById('globalLoader').style.display='flex';document.querySelectorAll('.page').forEach(el=>el.classList.add('hidden'));initHome().then(()=>{let id=currentSearch.get('id')||currentPath.split('/')[2];openDetail(id).then(()=>{document.getElementById('globalLoader').style.display='none'})})}else if(validPages.includes(currentPath)){initHome().then(()=>{showPage(currentPath.replace('/',''))})}else{initHome()}});
 document.addEventListener('contextmenu',e=>e.preventDefault());document.onkeydown=function(e){if(e.keyCode==123||(e.ctrlKey&&e.shiftKey&&e.keyCode==73)||(e.ctrlKey&&e.shiftKey&&e.keyCode==74)||(e.ctrlKey&&e.keyCode==85)||(e.ctrlKey&&e.keyCode==67))return!1};document.addEventListener('dragstart',function(e){if(e.target.nodeName.toUpperCase()=="IMG")e.preventDefault()});
 
-function showPage(p){_showPageBase(p);if(p==='chat')startChat();else stopChat();if(p==='profile')renderProfile();if(p==='rank')renderRanking('downloads');if(p==='dmlist')loadDMList()}
+function showPage(p){_showPageBase(p);if(p==='chat')startChat();else stopChat();if(p==='profile')renderProfile();if(p==='rank')renderRanking('downloads')}
 let fbReady=false,auth=null,db=null,storage=null,currentUser=null,myProfile=null,adminSet=new Set(),chatUnsub=null,chatNotifyUnsub=null,authMode='login',lastSend=0,chatFirst=true,userCache={},lastChatSeen=0,_lastChatList=[];
 const USER_ICON='<svg style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
 function starSvg(sz){return'<svg style="width:'+sz+'px;height:'+sz+'px;" fill="currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'}
+function setRating(n){currentRating=n;renderStarInput()}
+function renderStarInput(){let box=document.getElementById('starInput');if(!box)return;let html='';for(let i=1;i<=5;i++){html+='<button type="button" onclick="setRating('+i+')" style="background:none;border:none;padding:4px;cursor:pointer;color:'+(i<=currentRating?'#eab308':'var(--border-color)')+';">'+starSvg(28)+'</button>'}box.innerHTML=html}
 try{if(window.firebase&&window.FIREBASE_CONFIG&&FIREBASE_CONFIG.apiKey&&FIREBASE_CONFIG.apiKey.indexOf('PEGA')<0){firebase.initializeApp(FIREBASE_CONFIG);auth=firebase.auth();db=firebase.firestore();try{storage=firebase.storage()}catch(e){storage=null}fbReady=true}}catch(e){console.log('Firebase no inició',e)}
 function isAdmin(){return !!(currentUser&&adminSet.has(currentUser.uid))}
 function tsMs(t){return t&&t.toMillis?t.toMillis():0}
 function fmtDate(t){let d=t&&t.toDate?t.toDate():new Date();return d.toLocaleDateString('es')}
 function fmtTime(d){let n=new Date(),h=d.toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});return d.toDateString()===n.toDateString()?h:d.toLocaleDateString('es',{day:'2-digit',month:'2-digit'})+' '+h}
 
+const BADGE_DEFS={
+  verified:{label:'Verificado',color:'#1D9BF0',icon:'✓'},
+  vip:{label:'VIP',color:'#a855f7',icon:'★'},
+  mod:{label:'MOD',color:'#10b981',icon:'🛡'},
+  helper:{label:'Helper',color:'#3b82f6',icon:'💬'},
+  partner:{label:'Partner',color:'#f59e0b',icon:'🤝'},
+  pro:{label:'PRO',color:'#ec4899',icon:'⚡'},
+  og:{label:'OG',color:'#f97316',icon:'🔥'},
+  staff:{label:'Staff',color:'#6366f1',icon:'⚙'}
+};
 function verifiedBadge(size){size=size||16;return `<svg class="verified-badge" width="${size}" height="${size}" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-left:4px;flex-shrink:0;"><circle cx="12" cy="12" r="11" fill="#1D9BF0"/><path d="M10.1 15.9l-3.2-3.2 1.4-1.4 1.8 1.8 4.6-4.6 1.4 1.4-6 6z" fill="#fff"/></svg>`}
-function userTitleHTML(name,uid,size){size=size||14;let v=(uid&&userCache[uid]&&userCache[uid].verified)||(uid&&creatorSet.has(uid));let u=uid&&userCache[uid];let un=u&&u.username?` <span style="color:var(--text-muted);font-weight:600;font-size:0.9em;">@${escapeHTML(u.username)}</span>`:'';return `${escapeHTML(name||'Usuario')}${v?verifiedBadge(size):''}${un}`}
-async function isUsernameTaken(uname,exceptUid){
-  uname=(uname||'').toLowerCase().replace(/[^a-z0-9_]/g,'').slice(0,20);
-  if(uname.length<3)return true;
-  try{let s=await db.collection('usernames').doc(uname).get();if(!s.exists)return false;return s.data().uid!==exceptUid}catch(e){return false}
+function badgePill(key){
+  let d=BADGE_DEFS[key];if(!d)return '';
+  return `<span class="badge-admin" style="background:${d.color};margin-left:4px;">${d.icon} ${d.label}</span>`;
 }
-function validUsername(u){return /^[a-z0-9_]{3,20}$/.test((u||'').toLowerCase())}
-async function uploadProfilePhoto(file){
-  if(!storage||!currentUser)throw new Error('Storage no disponible');
-  if(!file||!file.type.startsWith('image/'))throw new Error('Archivo no es imagen');
-  if(file.size>3*1024*1024)throw new Error('Máx 3 MB');
-  let ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
-  let ref=storage.ref('avatars/'+currentUser.uid+'/profile.'+ext);
-  await ref.put(file,{contentType:file.type});
-  return await ref.getDownloadURL();
+function userBadgesHTML(uid,uInfo){
+  uInfo=uInfo||(uid&&userCache[uid])||{};
+  let html='';
+  if(uInfo.verified||(uid&&typeof creatorSet!=='undefined'&&creatorSet.has(uid)))html+=verifiedBadge(14);
+  if(uid&&typeof creatorSet!=='undefined'&&creatorSet.has(uid))html+=`<span class="badge-admin" style="background:#eab308;color:#000;margin-left:4px;">CREADOR</span>`;
+  else if(uid&&typeof adminSet!=='undefined'&&adminSet.has(uid))html+=`<span class="badge-admin" style="margin-left:4px;">ADMIN</span>`;
+  let extra=Array.isArray(uInfo.badges)?uInfo.badges:[];
+  extra.forEach(function(k){if(k&&k!=='verified')html+=badgePill(k)});
+  return html;
 }
 function avatarHTML(name,photo,size){size=size||36;let n=(name||'?').trim()||'?',hue=0;for(let i=0;i<n.length;i++)hue=(hue*31+n.charCodeAt(i))%360;if(photo&&/^https:\/\//.test(photo))return`<img src="${escapeHTML(photo)}" alt="" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0;">`;return`<div style="width:${size}px;height:${size}px;border-radius:50%;background:hsl(${hue},55%,45%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:${Math.round(size*0.45)}px;flex-shrink:0;">${escapeHTML(n.charAt(0).toUpperCase())}</div>`}
 async function fbGames(){if(!fbReady)return[];try{let s=await db.collection('games').get();return s.docs.map(d=>Object.assign({game_id:d.id},d.data())).filter(g=>g.is_active!==false).sort((a,b)=>tsMs(b.createdAt)-tsMs(a.createdAt))}catch(e){console.log('fbGames',e);return[]}}
@@ -438,16 +428,16 @@ async function viewUserProfile(uid){
     let snap=await db.collection('users').doc(uid).get();
     let p=snap.exists?snap.data():{name:'Usuario',bio:'',photoURL:''};
     let name=p.name||'Usuario';
-    let badge=creatorSet.has(uid)?' <span class="badge-admin" style="background:#eab308;color:#000">CREADOR</span>':(adminSet.has(uid)?' <span class="badge-admin">ADMIN</span>':'');
+    let badge='';
     let banned=false;try{let b=await db.collection('bans').doc(uid).get();banned=b.exists}catch(e){}
     let revCount=0;try{let r=await db.collection('reviews').where('uid','==',uid).get();revCount=r.size}catch(e){}
     let ver=p.verified||creatorSet.has(uid);
     body.innerHTML=`
       <div style="display:flex;justify-content:center;margin-bottom:12px;">${avatarHTML(name,p.photoURL,90)}</div>
       <div style="text-align:center;margin-bottom:16px;">
-        <div style="font-size:18px;font-weight:900;color:var(--text-main);display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;">${escapeHTML(name)}${ver?verifiedBadge(18):''}${badge}</div>
+        <div style="font-size:18px;font-weight:900;color:var(--text-main);display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;">${escapeHTML(name)}${userBadgesHTML(uid,p)}</div>
         ${banned?'<div style="margin-top:6px;font-size:11px;color:var(--danger);font-weight:700;">Cuenta restringida</div>':''}
-        <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">Reseñas: <b>${revCount}</b></div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">Reseñas: <b>${revCount}</b></div><div style="margin-top:8px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">${reviewRankHTML(revCount)}${(p.reviewStreak>1)?'<span style="font-size:12px;color:#f97316;font-weight:700;">🔥 Racha '+p.reviewStreak+'</span>':''}</div>
       </div>
       <div style="background:var(--bg-body);border:1px solid var(--border-color);border-radius:12px;padding:14px;min-height:60px;">
         <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;">Bio</div>
@@ -458,7 +448,6 @@ async function viewUserProfile(uid){
         ${!creatorSet.has(uid)?(banned?`<button class="btn-main" style="background:#10b981;font-size:12px;" onclick="adminUnbanFromProfile('${escapeHTML(uid)}')">Quitar ban</button>`:`<button class="btn-main" style="background:var(--danger);font-size:12px;" onclick="adminBanFromProfile('${escapeHTML(uid)}')">Banear</button>`):''}
       </div>`:''}
       
-      ${(currentUser&&uid!==currentUser.uid)?`<button class="btn-main" style="margin-top:12px;" onclick="openDM('${escapeHTML(uid)}')">Mensaje privado</button>`:''}
       <button class="btn-main" style="margin-top:12px;background:transparent;border:1px solid var(--border-color);color:var(--text-main);" onclick="closeViewProfile()">Cerrar</button>`;
   }catch(e){
     console.log(e);
@@ -473,13 +462,75 @@ async function adminUnbanFromProfile(uid){
   try{await db.collection('bans').doc(uid).delete();showToast('Ban eliminado');viewUserProfile(uid)}catch(e){showToast('Error',true)}
 }
 
-async function renderProfile(){let c=document.getElementById('profileBox');if(!fbReady){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;">Firebase no está configurado.</p>';return}if(!currentUser){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:12px;">Inicia sesión para ver tu perfil.</p><button class="btn-main" onclick="openAuth()">Iniciar sesión</button>';return}let p=myProfile||{};c.innerHTML=`<div style="display:flex;justify-content:center;margin-bottom:8px;">${avatarHTML(p.name,p.photoURL,84)}</div><div style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:16px;">${escapeHTML(currentUser.email||'')}${(p.verified||isCreator())?verifiedBadge(16):''}${isCreator()?' <span class="badge-admin" style="background:#eab308;color:#000">CREADOR</span>':(isAdmin()?' <span class="badge-admin">ADMIN</span>':'')}<br>Reseñas escritas: <b id="pRevCount">0</b></div><input class="fld" id="pName" placeholder="Nombre" maxlength="30" value="${escapeHTML(p.name||'')}"><input class="fld" id="pPhoto" placeholder="Foto (enlace https://...)" value="${escapeHTML(p.photoURL||'')}"><textarea class="fld" id="pBio" placeholder="Sobre ti (máx. 160)" maxlength="160" style="min-height:70px;">${escapeHTML(p.bio||'')}</textarea><button class="btn-main" onclick="saveProfile()">Guardar perfil</button>${isAdmin()?'<a href="/admin/" class="btn-main" style="display:block;text-align:center;text-decoration:none;margin-top:8px;background:'+(isCreator()?'#eab308;color:#000':'#3B82F6')+';">'+(isCreator()?'Panel Creador':'Panel Admin')+'</a>':''}<button class="btn-main" style="background:transparent;border:1px solid var(--border-color);color:var(--text-main);margin-top:8px;" onclick="logout()">Cerrar sesión</button>`;try{let r=await db.collection('reviews').where('uid','==',currentUser.uid).get();let e=document.getElementById('pRevCount');if(e)e.innerText=r.size}catch(e){}}
+async function renderProfile(){let c=document.getElementById('profileBox');if(!fbReady){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;">Firebase no está configurado.</p>';return}if(!currentUser){c.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:12px;">Inicia sesión para ver tu perfil.</p><button class="btn-main" onclick="openAuth()">Iniciar sesión</button>';return}let p=myProfile||{};c.innerHTML=`<div style="display:flex;justify-content:center;margin-bottom:8px;">${avatarHTML(p.name,p.photoURL,84)}</div><div style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:16px;">${escapeHTML(currentUser.email||'')}${userBadgesHTML(currentUser.uid,p)}<br>Reseñas escritas: <b id="pRevCount">0</b><div id="pRankBox" style="margin-top:8px;"></div></div><input class="fld" id="pName" placeholder="Nombre" maxlength="30" value="${escapeHTML(p.name||'')}"><input class="fld" id="pPhoto" placeholder="Foto (enlace https://...)" value="${escapeHTML(p.photoURL||'')}"><textarea class="fld" id="pBio" placeholder="Sobre ti (máx. 160)" maxlength="160" style="min-height:70px;">${escapeHTML(p.bio||'')}</textarea><button class="btn-main" onclick="saveProfile()">Guardar perfil</button>${isAdmin()?'<a href="/admin/" class="btn-main" style="display:block;text-align:center;text-decoration:none;margin-top:8px;background:'+(isCreator()?'#eab308;color:#000':'#3B82F6')+';">'+(isCreator()?'Panel Creador':'Panel Admin')+'</a>':''}<button class="btn-main" style="background:transparent;border:1px solid var(--border-color);color:var(--text-main);margin-top:8px;" onclick="logout()">Cerrar sesión</button>`;try{let r=await db.collection('reviews').where('uid','==',currentUser.uid).get();let e=document.getElementById('pRevCount');if(e)e.innerText=r.size;let rb=document.getElementById('pRankBox');if(rb){let cnt=r.size;let st=(myProfile&&myProfile.reviewStreak)||0;rb.innerHTML=reviewRankHTML(cnt)+(st>1?' <span style="font-size:12px;color:#f97316;font-weight:700;margin-left:6px;">🔥 Racha '+st+' días</span>':'')}}catch(e){}}
 async function saveProfile(){let name=document.getElementById('pName').value.trim(),photo=document.getElementById('pPhoto').value.trim(),bio=document.getElementById('pBio').value.trim();if(name.length<2||name.length>30){showToast('El nombre debe tener entre 2 y 30 letras.',true);return}if(photo&&!/^https:\/\//.test(photo)){showToast('La foto debe ser un enlace https.',true);return}try{await db.collection('users').doc(currentUser.uid).set({name:name,photoURL:photo,bio:bio.slice(0,160)},{merge:true});myProfile=Object.assign({},myProfile,{name:name,photoURL:photo,bio:bio});userCache[currentUser.uid]=Object.assign({},userCache[currentUser.uid]||{},{name:name,photoURL:photo,bio:bio});updateAuthUI();renderProfile();if(typeof _lastChatList!=='undefined'&&_lastChatList.length)renderChat(_lastChatList);showToast('Perfil guardado')}catch(e){console.log(e);showToast('No se pudo guardar el perfil',true)}}
 
 
-async function submitReview(){if(!curGame)return;if(!currentUser){openAuth();return}if(!currentRating){showToast('¡Elige primero las estrellas!',true);return}let text=document.getElementById('revText').value.trim().slice(0,500);try{await db.collection('reviews').doc(curGame.game_id+'_'+currentUser.uid).set({game_id:curGame.game_id,uid:currentUser.uid,name:(myProfile&&myProfile.name)||'Usuario',photo:(myProfile&&myProfile.photoURL)||'',rating:currentRating,text:text,createdAt:firebase.firestore.FieldValue.serverTimestamp()});showToast('¡Reseña enviada con éxito!');await loadReviews(curGame.game_id,true)}catch(e){console.log(e);showToast('Error al enviar la reseña.',true)}}
+
+/* ===== RANGOS Y RACHAS POR RESEÑAS ===== */
+const REVIEW_RANKS=[
+  {min:0,name:'Novato',color:'#94a3b8',icon:'🌱'},
+  {min:1,name:'Bronce',color:'#cd7f32',icon:'🥉'},
+  {min:5,name:'Plata',color:'#c0c0c0',icon:'🥈'},
+  {min:15,name:'Oro',color:'#fbbf24',icon:'🥇'},
+  {min:30,name:'Platino',color:'#67e8f9',icon:'💎'},
+  {min:50,name:'Diamante',color:'#38bdf8',icon:'💠'},
+  {min:100,name:'Leyenda',color:'#e879f9',icon:'👑'}
+];
+function getReviewRank(count){
+  count=Number(count)||0;
+  let r=REVIEW_RANKS[0];
+  for(let i=0;i<REVIEW_RANKS.length;i++){if(count>=REVIEW_RANKS[i].min)r=REVIEW_RANKS[i]}
+  return r;
+}
+function reviewRankHTML(count){
+  let r=getReviewRank(count);
+  return `<span style="display:inline-flex;align-items:center;gap:4px;background:${r.color}22;color:${r.color};border:1px solid ${r.color}55;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;">${r.icon} ${r.name}</span>`;
+}
+function dayKey(d){
+  let x=d instanceof Date?d:new Date(d);
+  return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+}
+async function updateReviewStatsOnSubmit(){
+  if(!currentUser||!db)return null;
+  let ref=db.collection('users').doc(currentUser.uid);
+  let snap=await ref.get();
+  let p=snap.exists?snap.data():{};
+  let count=(p.reviewCount||0)+1;
+  // only increment if first review for this game was new - handled by caller with isNew flag
+  let today=dayKey(new Date());
+  let last=p.reviewLastDay||'';
+  let streak=p.reviewStreak||0;
+  if(last===today){
+    // same day, keep streak
+  }else{
+    let yest=new Date();yest.setDate(yest.getDate()-1);
+    if(last===dayKey(yest))streak=streak+1;
+    else streak=1;
+  }
+  let data={
+    reviewCount:count,
+    reviewStreak:streak,
+    reviewLastDay:today,
+    reviewPoints:(p.reviewPoints||0)+10
+  };
+  await ref.set(data,{merge:true});
+  myProfile=Object.assign({},myProfile||{},data);
+  userCache[currentUser.uid]=Object.assign({},userCache[currentUser.uid]||{},data);
+  return data;
+}
+async function refreshUserReviewCount(uid){
+  try{
+    let s=await db.collection('reviews').where('uid','==',uid).get();
+    let count=s.size;
+    await db.collection('users').doc(uid).set({reviewCount:count},{merge:true});
+    return count;
+  }catch(e){return 0}
+}
+
+async function submitReview(){if(!curGame)return;if(!currentUser){openAuth();return}if(!currentRating){showToast('¡Elige primero las estrellas!',true);return}let text=document.getElementById('revText').value.trim().slice(0,500);try{let rid=curGame.game_id+'_'+currentUser.uid;let prev=await db.collection('reviews').doc(rid).get();let isNew=!prev.exists;await db.collection('reviews').doc(rid).set({game_id:curGame.game_id,uid:currentUser.uid,name:(myProfile&&myProfile.name)||'Usuario',photo:(myProfile&&myProfile.photoURL)||'',rating:currentRating,text:text,createdAt:prev.exists&&prev.data().createdAt?prev.data().createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});if(isNew){let st=await updateReviewStatsOnSubmit();let rank=getReviewRank(st&&st.reviewCount);showToast('¡Reseña enviada! '+rank.icon+' '+rank.name+(st&&st.reviewStreak>1?' · Racha '+st.reviewStreak+' días':''))}else{showToast('¡Reseña actualizada!')}await loadReviews(curGame.game_id,true)}catch(e){console.log(e);showToast('Error al enviar la reseña.',true)}}
 async function delReview(id){if(!confirm('¿Eliminar esta reseña?'))return;try{await db.collection('reviews').doc(id).delete();if(curGame)loadReviews(curGame.game_id)}catch(e){showToast('No se pudo eliminar',true)}}
-async function loadReviews(id,keep){let revs=[];if(fbReady){try{let sn=await db.collection('reviews').where('game_id','==',id).get();revs=sn.docs.map(d=>Object.assign({id:d.id},d.data({serverTimestamps:'estimate'})))}catch(e){console.log(e)}}revs.sort((a,b)=>tsMs(b.createdAt)-tsMs(a.createdAt));let total=revs.length,sum=revs.reduce((a,b)=>a+b.rating,0),avg=total?(sum/total).toFixed(1):'0.0';if(curGame&&curGame.game_id===id)curGame.rating_avg=avg;if(!keep){currentRating=0;document.getElementById('revText').value=''}let mine=currentUser?revs.find(r=>r.uid===currentUser.uid):null;if(mine&&!currentRating){currentRating=mine.rating;document.getElementById('revText').value=mine.text||''}renderStarInput();document.getElementById('reviewLoginPrompt').style.display=currentUser?'none':'block';document.getElementById('reviewFormWrap').style.display=currentUser?'block':'none';document.getElementById('rateAvgTxt').innerText=avg;document.getElementById('rateCount').innerText=total+' reseñas';let sh='';for(let i=1;i<=5;i++)sh+=`<span style="color:${i<=Math.round(avg)?'#eab308':'var(--border-color)'};">${starSvg(16)}</span>`;document.getElementById('rateStars').innerHTML=sh;let counts=[0,0,0,0,0];revs.forEach(r=>counts[r.rating-1]++);let bh='';for(let i=4;i>=0;i--){let pct=total?(counts[i]/total*100):0;bh+=`<div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text-muted);"><span>${i+1}</span><div style="flex:1;height:6px;background:var(--border-color);border-radius:3px;overflow:hidden;"><div style="height:100%;background:var(--accent);border-radius:3px;width:${pct}%"></div></div></div>`}document.getElementById('rateBars').innerHTML=bh;document.getElementById('reviewList').innerHTML=revs.map(r=>`<div style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;padding:16px;"><div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">${avatarHTML(r.name,r.photo,32)}<div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:13px;cursor:pointer;" onclick="viewUserProfile('${escapeHTML(r.uid||'')}')">${escapeHTML(r.name||'Usuario')}${creatorSet.has(r.uid)?' <span class="badge-admin" style="background:#eab308;color:#000">CREADOR</span>':(adminSet.has(r.uid)?' <span class="badge-admin">ADMIN</span>':'')}</div><div style="font-size:10px;color:var(--text-muted);">${fmtDate(r.createdAt)}</div></div><span style="color:#eab308;display:flex;gap:2px;">${Array(r.rating).fill(starSvg(12)).join('')}</span>${(currentUser&&(currentUser.uid===r.uid||isAdmin()))?`<button class="msg-del" onclick="delReview('${escapeHTML(r.id)}')">✕</button>`:''}</div><div style="font-size:12px;color:var(--text-muted);line-height:1.6;">${escapeHTML(r.text||'')}</div></div>`).join('')||'<div style="text-align:center;color:var(--text-muted);font-size:12px;padding:24px 0;">Aún no hay reseñas.</div>'}
+async function loadReviews(id,keep){let revs=[];if(fbReady){try{let sn=await db.collection('reviews').where('game_id','==',id).get();revs=sn.docs.map(d=>Object.assign({id:d.id},d.data({serverTimestamps:'estimate'})))}catch(e){console.log(e)}}revs.sort((a,b)=>tsMs(b.createdAt)-tsMs(a.createdAt));let total=revs.length,sum=revs.reduce((a,b)=>a+b.rating,0),avg=total?(sum/total).toFixed(1):'0.0';if(curGame&&curGame.game_id===id)curGame.rating_avg=avg;if(!keep){currentRating=0;document.getElementById('revText').value=''}let mine=currentUser?revs.find(r=>r.uid===currentUser.uid):null;if(mine&&!currentRating){currentRating=mine.rating;document.getElementById('revText').value=mine.text||''}renderStarInput();document.getElementById('reviewLoginPrompt').style.display=currentUser?'none':'block';document.getElementById('reviewFormWrap').style.display=currentUser?'block':'none';document.getElementById('rateAvgTxt').innerText=avg;document.getElementById('rateCount').innerText=total+' reseñas';let sh='';for(let i=1;i<=5;i++)sh+=`<span style="color:${i<=Math.round(avg)?'#eab308':'var(--border-color)'};">${starSvg(16)}</span>`;document.getElementById('rateStars').innerHTML=sh;let counts=[0,0,0,0,0];revs.forEach(r=>counts[r.rating-1]++);let bh='';for(let i=4;i>=0;i--){let pct=total?(counts[i]/total*100):0;bh+=`<div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text-muted);"><span>${i+1}</span><div style="flex:1;height:6px;background:var(--border-color);border-radius:3px;overflow:hidden;"><div style="height:100%;background:var(--accent);border-radius:3px;width:${pct}%"></div></div></div>`}document.getElementById('rateBars').innerHTML=bh;document.getElementById('reviewList').innerHTML=revs.map(r=>`<div style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;padding:16px;"><div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">${avatarHTML(r.name,r.photo,32)}<div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:13px;cursor:pointer;" onclick="viewUserProfile('${escapeHTML(r.uid||'')}')">${escapeHTML(r.name||'Usuario')}${userBadgesHTML(r.uid,userCache[r.uid])}</div><div style="font-size:10px;color:var(--text-muted);">${fmtDate(r.createdAt)}</div></div><span style="color:#eab308;display:flex;gap:2px;">${Array(Math.max(0,Math.min(5,Number(r.rating)||0))).fill(starSvg(12)).join('')}</span>${(currentUser&&(currentUser.uid===r.uid||isAdmin()))?`<button class="msg-del" onclick="delReview('${escapeHTML(r.id)}')">✕</button>`:''}</div><div style="font-size:12px;color:var(--text-muted);line-height:1.6;">${escapeHTML(r.text||'')}</div></div>`).join('')||'<div style="text-align:center;color:var(--text-muted);font-size:12px;padding:24px 0;">Aún no hay reseñas.</div>'}
 function updateChatInput(){let i=document.getElementById('chatInput');if(!i)return;i.readOnly=!currentUser;i.placeholder=currentUser?'Escribe un mensaje...':'Inicia sesión para chatear'}
 function setChatBadge(on){let el=document.querySelector('.bnav-item[data-nav="chat"]');if(!el)return;let dot=el.querySelector('.chat-dot');if(on){if(!dot){dot=document.createElement('span');dot.className='chat-dot';el.appendChild(dot)}dot.style.display='block'}else if(dot)dot.style.display='none'}
 function markChatSeen(){lastChatSeen=Date.now();try{localStorage.setItem('chatSeen',String(lastChatSeen))}catch(e){}setChatBadge(false)}
@@ -493,7 +544,7 @@ if(!_chatSnapFirst&&list.length){let last=list[list.length-1];if(last.uid&&(!cur
 _chatSnapFirst=false;
 _lastChatList=list;let uids=[];list.forEach(function(m){if(m.uid&&uids.indexOf(m.uid)<0)uids.push(m.uid)});await resolveUsers(uids);renderChat(list);let onChat=document.getElementById('page-chat')&&document.getElementById('page-chat').classList.contains('active');if(onChat)markChatSeen()},function(e){console.log(e);box.innerHTML='<div class="empty-state"><p>No se pudo cargar el chat.</p></div>'})}
 function stopChat(){/* se mantiene el listener para el punto rojo; no desuscribir */}
-function renderChat(list){let box=document.getElementById('chatMsgs'),near=box.scrollHeight-box.scrollTop-box.clientHeight<120,html='',prev=null;list.forEach(m=>{let t=m.createdAt&&m.createdAt.toDate?m.createdAt.toDate():new Date(),same=prev&&prev.uid===m.uid&&(t-prev.t)<300000;prev={uid:m.uid,t:t};let mine=currentUser&&currentUser.uid===m.uid;let edited=m.edited?' <span style="font-size:10px;opacity:.7">(editado)</span>':'';let cens=m.censored?' <span style="font-size:10px;opacity:.7;color:#ef4444">(censurado)</span>':'';let handlers=` data-id="${escapeHTML(m.id)}" data-uid="${escapeHTML(m.uid||'')}" data-text="${escapeHTML(m.text||'')}" oncontextmenu="event.preventDefault();openMsgMenu('${escapeHTML(m.id)}',event)" ontouchstart="lpStart('${escapeHTML(m.id)}',event)" ontouchend="lpCancel()" ontouchmove="lpCancel()" onmousedown="if(event.button===0)lpStart('${escapeHTML(m.id)}',event)" onmouseup="lpCancel()" onmouseleave="lpCancel()"`;let txt=`<div class="msg-text">${escapeHTML(m.text||'')}</div>`;let uInfo=(m.uid&&userCache[m.uid])?userCache[m.uid]:null;let dispName=(uInfo&&uInfo.name)||m.name||'Usuario';let dispPhoto=(uInfo&&uInfo.photoURL)||m.photo||'';html+=same?`<div class="msg grouped"${handlers}><div class="msg-av"></div><div class="msg-main">${txt}</div></div>`:`<div class="msg"${handlers}><div class="msg-av" style="cursor:pointer;" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(m.uid||'')}')">${avatarHTML(dispName,dispPhoto,36)}</div><div class="msg-main"><div class="msg-head"><b style="cursor:pointer;" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(m.uid||'')}')">${escapeHTML(dispName)}${(uInfo&&uInfo.verified)||creatorSet.has(m.uid)?verifiedBadge(14):''}</b>${creatorSet.has(m.uid)?'<span class="badge-admin" style="background:#eab308;color:#000">CREADOR</span>':(adminSet.has(m.uid)?'<span class="badge-admin">ADMIN</span>':'')}${edited}${cens}<span class="msg-time">${fmtTime(t)}</span></div>${txt}</div></div>`});box.innerHTML=html||'<div class="empty-state"><p>Aún no hay mensajes. ¡Escribe el primero!</p></div>';if(near||chatFirst){box.scrollTop=box.scrollHeight;chatFirst=false}}
+function renderChat(list){let box=document.getElementById('chatMsgs'),near=box.scrollHeight-box.scrollTop-box.clientHeight<120,html='',prev=null;list.forEach(m=>{let t=m.createdAt&&m.createdAt.toDate?m.createdAt.toDate():new Date(),same=prev&&prev.uid===m.uid&&(t-prev.t)<300000;prev={uid:m.uid,t:t};let mine=currentUser&&currentUser.uid===m.uid;let edited=m.edited?' <span style="font-size:10px;opacity:.7">(editado)</span>':'';let cens=m.censored?' <span style="font-size:10px;opacity:.7;color:#ef4444">(censurado)</span>':'';let handlers=` data-id="${escapeHTML(m.id)}" data-uid="${escapeHTML(m.uid||'')}" data-text="${escapeHTML(m.text||'')}" oncontextmenu="event.preventDefault();openMsgMenu('${escapeHTML(m.id)}',event)" ontouchstart="lpStart('${escapeHTML(m.id)}',event)" ontouchend="lpCancel()" ontouchmove="lpCancel()" onmousedown="if(event.button===0)lpStart('${escapeHTML(m.id)}',event)" onmouseup="lpCancel()" onmouseleave="lpCancel()"`;let txt=`<div class="msg-text">${escapeHTML(m.text||'')}</div>`;let uInfo=(m.uid&&userCache[m.uid])?userCache[m.uid]:null;let dispName=(uInfo&&uInfo.name)||m.name||'Usuario';let dispPhoto=(uInfo&&uInfo.photoURL)||m.photo||'';html+=same?`<div class="msg grouped"${handlers}><div class="msg-av"></div><div class="msg-main">${txt}</div></div>`:`<div class="msg"${handlers}><div class="msg-av" style="cursor:pointer;" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(m.uid||'')}')">${avatarHTML(dispName,dispPhoto,36)}</div><div class="msg-main"><div class="msg-head"><b style="cursor:pointer;" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(m.uid||'')}')">${escapeHTML(dispName)}</b>${userBadgesHTML(m.uid,uInfo)}${edited}${cens}<span class="msg-time">${fmtTime(t)}</span></div>${txt}</div></div>`});box.innerHTML=html||'<div class="empty-state"><p>Aún no hay mensajes. ¡Escribe el primero!</p></div>';if(near||chatFirst){box.scrollTop=box.scrollHeight;chatFirst=false}}
 
 
 /* ===== MODERACIÓN IA CHAT + FOTOS ===== */
@@ -692,23 +743,22 @@ function reportChatMsg(msgId,msgUid,msgText){
 }
 function renderRanking(mode){
   mode=mode||'downloads';
-  let b1=document.getElementById('rankTabDl'),b2=document.getElementById('rankTabRt');
-  if(b1&&b2){
-    if(mode==='downloads'){b1.style.background='var(--accent)';b1.style.color='#fff';b1.style.border='none';b2.style.background='var(--card-bg)';b2.style.color='var(--text-main)';b2.style.border='1px solid var(--border-color)'}
-    else{b2.style.background='var(--accent)';b2.style.color='#fff';b2.style.border='none';b1.style.background='var(--card-bg)';b1.style.color='var(--text-main)';b1.style.border='1px solid var(--border-color)'}
-  }
+  let tabs={downloads:'rankTabDl',rating:'rankTabRt',reviewers:'rankTabRv'};
+  Object.keys(tabs).forEach(function(k){
+    let el=document.getElementById(tabs[k]);if(!el)return;
+    if(k===mode){el.style.background='var(--accent)';el.style.color='#fff';el.style.border='none'}
+    else{el.style.background='var(--card-bg)';el.style.color='var(--text-main)';el.style.border='1px solid var(--border-color)'}
+  });
   let list=document.getElementById('rankList');if(!list)return;
+  if(mode==='reviewers'){
+    list.innerHTML='<p style="text-align:center;color:var(--text-muted);padding:16px;">Cargando reseñadores…</p>';
+    loadReviewerRanking();
+    return;
+  }
   if(!games||!games.length){list.innerHTML='<p style="text-align:center;color:var(--text-muted);padding:20px;">No hay juegos aún.</p>';return}
   let arr=games.slice();
-  if(mode==='downloads'){
-    arr.sort(function(a,b){return getStat(b.game_id)-getStat(a.game_id)});
-  }else{
-    arr.sort(function(a,b){
-      let ra=parseFloat(a.rating_avg)||0,rb=parseFloat(b.rating_avg)||0;
-      if(rb!==ra)return rb-ra;
-      return getStat(b.game_id)-getStat(a.game_id);
-    });
-  }
+  if(mode==='downloads')arr.sort(function(a,b){return getStat(b.game_id)-getStat(a.game_id)});
+  else arr.sort(function(a,b){let ra=parseFloat(a.rating_avg)||0,rb=parseFloat(b.rating_avg)||0;if(rb!==ra)return rb-ra;return getStat(b.game_id)-getStat(a.game_id)});
   arr=arr.slice(0,30);
   list.innerHTML=arr.map(function(g,i){
     let medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';
@@ -720,95 +770,35 @@ function renderRanking(mode){
       '<div style="font-size:12px;color:var(--text-muted);">'+escapeHTML(g.category||'')+' · '+stat+'</div></div></div>';
   }).join('')||'<p style="text-align:center;color:var(--text-muted);">Sin datos</p>';
 }
-
-
-/* ===== MENSAJES PRIVADOS (sin sistema de amigos) ===== */
-let dmPeer=null,dmUnsub=null,dmChatId=null;
-function pairId(a,b){return [a,b].sort().join('_')}
-function openDM(uid){
-  if(!currentUser){openAuth();return}
-  if(!uid||uid===currentUser.uid){showToast('No puedes escribirte a ti mismo',true);return}
-  dmPeer=uid;dmChatId=pairId(currentUser.uid,uid);
-  closeViewProfile();
-  showPage('dm');
-  let u=userCache[uid]||{};
-  document.getElementById('dmTitle').textContent=u.name||'Chat privado';
-  if(dmUnsub){dmUnsub();dmUnsub=null}
-  let _dmFirst=true;
-  dmUnsub=db.collection('dms').doc(dmChatId).collection('messages').orderBy('createdAt','asc').limitToLast(100)
-    .onSnapshot(async function(sn){
-      let list=sn.docs.map(function(d){return Object.assign({id:d.id},d.data())});
-      _dmFirst=false;
-      let uids=list.map(function(m){return m.uid}).filter(Boolean);
-      await resolveUsers(uids.concat([uid]));
-      let uu=userCache[uid]||{};
-      let t=document.getElementById('dmTitle');if(t)t.textContent=uu.name||'Chat privado';
-      renderDM(list);
-    },function(e){console.log(e);showToast('No se pudo cargar el chat',true)});
-}
-function renderDM(list){
-  let box=document.getElementById('dmMsgs');if(!box)return;
-  box.innerHTML=list.map(function(m){
-    let mine=currentUser&&m.uid===currentUser.uid;
-    let u=userCache[m.uid]||{};
-    let name=u.name||m.name||'Usuario';
-    return '<div style="display:flex;gap:8px;padding:6px 12px;'+(mine?'flex-direction:row-reverse;':'')+'">'+
-      avatarHTML(name,u.photoURL||m.photo,28)+
-      '<div style="max-width:75%;background:'+(mine?'var(--accent)':'var(--bg-body)')+';color:'+(mine?'#fff':'var(--text-main)')+';padding:10px 12px;border-radius:14px;font-size:13px;line-height:1.4;border:1px solid '+(mine?'transparent':'var(--border-color)')+';">'+escapeHTML(m.text||'')+(m.censored?' <span style="opacity:.7;font-size:10px">(censurado)</span>':'')+'</div></div>';
-  }).join('')||'<p style="text-align:center;color:var(--text-muted);font-size:12px;padding:20px;">Escribe el primer mensaje</p>';
-  box.scrollTop=box.scrollHeight;
-}
-async function sendDM(){
-  if(!currentUser||!dmChatId)return;
-  if(userBanned){showToast('Tu cuenta está restringida',true);return}
-  let inp=document.getElementById('dmInput');let text=(inp.value||'').trim();if(!text)return;
-  let mod=typeof moderateChatMessage==='function'?await moderateChatMessage(text):{ok:true,text:text};
-  if(!mod.ok){showToast(mod.msg||'No permitido',true);return}
-  let finalText=(mod.text||text).slice(0,500);
-  inp.value='';
+async function loadReviewerRanking(){
+  let list=document.getElementById('rankList');if(!list||!db)return;
   try{
-    await db.collection('dms').doc(dmChatId).set({
-      users:[currentUser.uid,dmPeer],
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-      lastText:finalText,
-      lastUid:currentUser.uid
-    },{merge:true});
-    await db.collection('dms').doc(dmChatId).collection('messages').add({
-      uid:currentUser.uid,
-      name:(myProfile&&myProfile.name)||'Usuario',
-      photo:(myProfile&&myProfile.photoURL)||'',
-      text:finalText,
-      censored:!!mod.censored,
-      createdAt:firebase.firestore.FieldValue.serverTimestamp()
-    });
-    if(mod.censored)showToast('Mensaje censurado por moderación');
-  }catch(e){console.log(e);showToast('No se pudo enviar',true)}
-}
-async function loadDMList(){
-  let box=document.getElementById('dmListBox');if(!box)return;
-  if(!currentUser){box.innerHTML='<p style="text-align:center;color:var(--text-muted);font-size:13px;padding:16px;">Inicia sesión para ver mensajes.</p><button class="btn-main" onclick="openAuth()">Iniciar sesión</button>';return}
-  box.innerHTML='<p style="text-align:center;color:var(--text-muted);font-size:13px;">Cargando…</p>';
-  try{
-    let s=await db.collection('dms').where('users','array-contains',currentUser.uid).orderBy('updatedAt','desc').limit(40).get();
-    if(s.empty){box.innerHTML='<p style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">No tienes conversaciones aún.<br>Abre el perfil de alguien y toca Mensaje privado.</p>';return}
-    let peers=[];
-    s.docs.forEach(function(d){
-      let u=(d.data().users||[]).filter(function(x){return x!==currentUser.uid})[0];
-      if(u)peers.push({uid:u,data:d.data(),id:d.id});
-    });
-    await resolveUsers(peers.map(function(p){return p.uid}));
-    box.innerHTML=peers.map(function(p){
-      let u=userCache[p.uid]||{};
-      let name=u.name||'Usuario';
-      let last=p.data.lastText||'';
-      return '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;margin-bottom:8px;cursor:pointer;" onclick="openDM(\''+escapeHTML(p.uid)+'\')">'+
-        avatarHTML(name,u.photoURL||'',40)+
-        '<div style="flex:1;min-width:0;"><b style="font-size:14px;">'+escapeHTML(name)+'</b>'+
-        '<div style="font-size:12px;color:var(--text-muted);" class="truncate">'+escapeHTML(last)+'</div></div></div>';
-    }).join('');
+    let s=await db.collection('users').orderBy('reviewCount','desc').limit(30).get();
+    let rows=s.docs.map(function(d){return Object.assign({uid:d.id},d.data())}).filter(function(u){return (u.reviewCount||0)>0});
+    if(!rows.length){
+      // fallback: aggregate from reviews
+      let all=await db.collection('reviews').get();
+      let map={};
+      all.docs.forEach(function(d){let u=d.data().uid;if(!u)return;if(!map[u])map[u]={uid:u,name:d.data().name||'Usuario',photo:d.data().photo||'',reviewCount:0};map[u].reviewCount++});
+      rows=Object.keys(map).map(function(k){return map[k]}).sort(function(a,b){return b.reviewCount-a.reviewCount}).slice(0,30);
+    }
+    rows.forEach(function(u){userCache[u.uid]=Object.assign({},userCache[u.uid]||{},u)});
+    list.innerHTML=rows.map(function(u,i){
+      let medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';
+      let rank=getReviewRank(u.reviewCount||0);
+      let streak=u.reviewStreak||0;
+      return '<div class="card" style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:8px;cursor:pointer;" onclick="viewUserProfile(\''+escapeHTML(u.uid)+'\')">'+
+        '<div style="font-size:18px;font-weight:900;width:36px;text-align:center;">'+medal+'</div>'+
+        avatarHTML(u.name,u.photoURL||u.photo,48)+
+        '<div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:14px;">'+escapeHTML(u.name||'Usuario')+' '+userBadgesHTML(u.uid,u)+'</div>'+
+        '<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">'+reviewRankHTML(u.reviewCount||0)+
+        '<span style="font-size:11px;color:var(--text-muted);">'+(u.reviewCount||0)+' reseñas</span>'+
+        (streak>1?'<span style="font-size:11px;color:#f97316;font-weight:700;">🔥 Racha '+streak+'</span>':'')+
+        '</div></div></div>';
+    }).join('')||'<p style="text-align:center;color:var(--text-muted);padding:20px;">Aún no hay reseñadores.</p>';
   }catch(e){
     console.log(e);
-    box.innerHTML='<p style="text-align:center;color:var(--text-muted);font-size:12px;padding:16px;">No se pudieron cargar. Si Firebase pide un índice, créalo desde el enlace del error.</p>';
+    list.innerHTML='<p style="text-align:center;color:var(--text-muted);padding:16px;">No se pudo cargar el ranking. Si pide índice, créalo en Firebase (reviewCount).</p>';
   }
 }
 
@@ -837,7 +827,7 @@ function openMsgMenu(id,e){
     html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:var(--text-main);font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="editMsg(\''+id+'\')">Editar</button>';
     html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:var(--danger);font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="delMsg(\''+id+'\');document.getElementById(\'msgMenu\').remove()">Eliminar</button>';
   } else {
-    html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:var(--accent);font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="openDM(\''+(msgUid||'')+'\');let m=document.getElementById(\'msgMenu\');if(m)m.remove()">Mensaje privado</button>';html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:#f59e0b;font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="reportChatMsg(\''+id+'\',\''+(msgUid||'')+'\',\''+(msgText||'').replace(/'/g,'')+'\');let m=document.getElementById(\'msgMenu\');if(m)m.remove()">Reportar</button>';
+    html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:#f59e0b;font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="reportChatMsg(\''+id+'\',\''+(msgUid||'')+'\',\''+(msgText||'').replace(/'/g,'')+'\');let m=document.getElementById(\'msgMenu\');if(m)m.remove()">Reportar</button>';
     if(typeof isAdmin==='function'&&isAdmin()){
       html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:var(--danger);font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="delMsg(\''+id+'\');document.getElementById(\'msgMenu\').remove()">Eliminar (admin)</button>';
     }
