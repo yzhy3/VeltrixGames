@@ -207,7 +207,7 @@ nav.bnav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:var(--nav-
 </div>
 <div style="display:flex;gap:12px;margin-bottom:20px;">
 <a id="dDownload" href="#" onclick="logDownload(event)" target="_blank" rel="noopener noreferrer" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:12px;background:var(--accent);color:#fff;font-weight:900;font-size:15px;text-decoration:none;"><svg style="width:20px;height:20px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> INSTALAR</a>
-<button type="button" id="reportGameBtn" onclick="reportGame()" style="padding:14px 12px;border-radius:12px;background:var(--card-bg);border:1px solid var(--border-color);color:var(--text-muted);font-weight:700;font-size:12px;cursor:pointer;">Reportar</button>
+<button type="button" id="reportGameBtn" onclick="reportGame()" title="Reportar" aria-label="Reportar" style="width:52px;display:flex;align-items:center;justify-content:center;padding:14px 0;border-radius:12px;background:var(--card-bg);border:1px solid var(--border-color);color:#f59e0b;cursor:pointer;"><svg style="width:22px;height:22px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></button>
 <button onclick="shareGame()" style="width:52px;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid var(--border-color);background:var(--card-bg);color:var(--text-main);cursor:pointer;"><svg style="width:20px;height:20px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
 </div>
 <div id="dMedia" style="display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:20px;padding-bottom:8px;scroll-snap-type:x mandatory;"></div>
@@ -360,18 +360,24 @@ const BADGE_DEFS={
   staff:{label:'Staff',color:'#6366f1',icon:'⚙'}
 };
 function verifiedBadge(size){size=size||16;return `<svg class="verified-badge" width="${size}" height="${size}" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-left:4px;flex-shrink:0;"><circle cx="12" cy="12" r="11" fill="#1D9BF0"/><path d="M10.1 15.9l-3.2-3.2 1.4-1.4 1.8 1.8 4.6-4.6 1.4 1.4-6 6z" fill="#fff"/></svg>`}
-function badgePill(key){
+function badgePill(key, textOnly){
   let d=BADGE_DEFS[key];if(!d)return '';
-  return `<span class="badge-admin" style="background:${d.color};margin-left:4px;">${d.icon} ${d.label}</span>`;
+  let label=textOnly?d.label:(d.icon+' '+d.label);
+  return `<span class="badge-admin" style="background:${d.color};margin-left:4px;">${label}</span>`;
 }
-function userBadgesHTML(uid,uInfo){
+function userBadgesHTML(uid,uInfo,opts){
+  opts=opts||{};
+  let textOnly=!!opts.textOnly;
   uInfo=uInfo||(uid&&userCache[uid])||{};
   let html='';
-  if(uInfo.verified||(uid&&typeof creatorSet!=='undefined'&&creatorSet.has(uid)))html+=verifiedBadge(14);
+  if(uInfo.verified||(uid&&typeof creatorSet!=='undefined'&&creatorSet.has(uid))){
+    if(textOnly) html+=`<span class="badge-admin" style="background:#1D9BF0;margin-left:4px;">VERIFICADO</span>`;
+    else html+=verifiedBadge(14);
+  }
   if(uid&&typeof creatorSet!=='undefined'&&creatorSet.has(uid))html+=`<span class="badge-admin" style="background:#eab308;color:#000;margin-left:4px;">CREADOR</span>`;
   else if(uid&&typeof adminSet!=='undefined'&&adminSet.has(uid))html+=`<span class="badge-admin" style="margin-left:4px;">ADMIN</span>`;
   let extra=Array.isArray(uInfo.badges)?uInfo.badges:[];
-  extra.forEach(function(k){if(k&&k!=='verified')html+=badgePill(k)});
+  extra.forEach(function(k){if(k&&k!=='verified')html+=badgePill(k,textOnly)});
   return html;
 }
 function avatarHTML(name,photo,size){size=size||36;let n=(name||'?').trim()||'?',hue=0;for(let i=0;i<n.length;i++)hue=(hue*31+n.charCodeAt(i))%360;if(photo&&/^https:\/\//.test(photo))return`<img src="${escapeHTML(photo)}" alt="" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0;">`;return`<div style="width:${size}px;height:${size}px;border-radius:50%;background:hsl(${hue},55%,45%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:${Math.round(size*0.45)}px;flex-shrink:0;">${escapeHTML(n.charAt(0).toUpperCase())}</div>`}
@@ -549,7 +555,7 @@ if(!_chatSnapFirst&&list.length){let last=list[list.length-1];if(last.uid&&(!cur
 _chatSnapFirst=false;
 _lastChatList=list;let uids=[];list.forEach(function(m){if(m.uid&&uids.indexOf(m.uid)<0)uids.push(m.uid)});await resolveUsers(uids);renderChat(list);let onChat=document.getElementById('page-chat')&&document.getElementById('page-chat').classList.contains('active');if(onChat)markChatSeen()},function(e){console.log(e);box.innerHTML='<div class="empty-state"><p>No se pudo cargar el chat.</p></div>'})}
 function stopChat(){/* se mantiene el listener para el punto rojo; no desuscribir */}
-function renderChat(list){let box=document.getElementById('chatMsgs'),near=box.scrollHeight-box.scrollTop-box.clientHeight<120,html='',prev=null;list.forEach(m=>{let t=m.createdAt&&m.createdAt.toDate?m.createdAt.toDate():new Date(),same=prev&&prev.uid===m.uid&&(t-prev.t)<300000;prev={uid:m.uid,t:t};let mine=currentUser&&currentUser.uid===m.uid;let edited=m.edited?' <span style="font-size:10px;opacity:.7">(editado)</span>':'';let cens=m.censored?' <span style="font-size:10px;opacity:.7;color:#ef4444">(censurado)</span>':'';let handlers=` data-id="${escapeHTML(m.id)}" data-uid="${escapeHTML(m.uid||'')}" data-text="${escapeHTML(m.text||'')}" oncontextmenu="event.preventDefault();openMsgMenu('${escapeHTML(m.id)}',event)" ontouchstart="lpStart('${escapeHTML(m.id)}',event)" ontouchend="lpCancel()" ontouchmove="lpCancel()" onmousedown="if(event.button===0)lpStart('${escapeHTML(m.id)}',event)" onmouseup="lpCancel()" onmouseleave="lpCancel()"`;let txt=`<div class="msg-text">${escapeHTML(m.text||'')}</div>`;let uInfo=(m.uid&&userCache[m.uid])?userCache[m.uid]:null;let dispName=(uInfo&&uInfo.name)||m.name||'Usuario';let dispPhoto=(uInfo&&uInfo.photoURL)||m.photo||'';html+=same?`<div class="msg grouped"${handlers}><div class="msg-av"></div><div class="msg-main">${txt}</div></div>`:`<div class="msg"${handlers}><div class="msg-av" style="cursor:pointer;" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(m.uid||'')}')">${avatarHTML(dispName,dispPhoto,36)}</div><div class="msg-main"><div class="msg-head"><b style="cursor:pointer;" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(m.uid||'')}')">${escapeHTML(dispName)}</b>${userBadgesHTML(m.uid,uInfo)}${edited}${cens}<span class="msg-time">${fmtTime(t)}</span></div>${txt}</div></div>`});box.innerHTML=html||'<div class="empty-state"><p>Aún no hay mensajes. ¡Escribe el primero!</p></div>';if(near||chatFirst){box.scrollTop=box.scrollHeight;chatFirst=false}}
+function renderChat(list){let box=document.getElementById('chatMsgs'),near=box.scrollHeight-box.scrollTop-box.clientHeight<120,html='',prev=null;list.forEach(m=>{let t=m.createdAt&&m.createdAt.toDate?m.createdAt.toDate():new Date(),same=prev&&prev.uid===m.uid&&(t-prev.t)<300000;prev={uid:m.uid,t:t};let mine=currentUser&&currentUser.uid===m.uid;let edited=m.edited?' <span style="font-size:10px;opacity:.7">(editado)</span>':'';let cens=m.censored?' <span style="font-size:10px;opacity:.7;color:#ef4444">(censurado)</span>':'';let handlers=` data-id="${escapeHTML(m.id)}" data-uid="${escapeHTML(m.uid||'')}" data-text="${escapeHTML(m.text||'')}" oncontextmenu="event.preventDefault();openMsgMenu('${escapeHTML(m.id)}',event)" ontouchstart="lpStart('${escapeHTML(m.id)}',event)" ontouchend="lpCancel()" ontouchmove="lpCancel()" onmousedown="if(event.button===0)lpStart('${escapeHTML(m.id)}',event)" onmouseup="lpCancel()" onmouseleave="lpCancel()"`;let txt=`<div class="msg-text">${escapeHTML(m.text||'')}</div>`;let uInfo=(m.uid&&userCache[m.uid])?userCache[m.uid]:null;let dispName=(uInfo&&uInfo.name)||m.name||'Usuario';let dispPhoto=(uInfo&&uInfo.photoURL)||m.photo||'';html+=same?`<div class="msg grouped"${handlers}><div class="msg-av"></div><div class="msg-main">${txt}</div></div>`:`<div class="msg"${handlers}><div class="msg-av" style="cursor:pointer;" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(m.uid||'')}')">${avatarHTML(dispName,dispPhoto,36)}</div><div class="msg-main"><div class="msg-head"><b style="cursor:pointer;" onclick="event.stopPropagation();viewUserProfile('${escapeHTML(m.uid||'')}')">${escapeHTML(dispName)}</b>${userBadgesHTML(m.uid,uInfo,{textOnly:true})}${edited}${cens}<span class="msg-time">${fmtTime(t)}</span></div>${txt}</div></div>`});box.innerHTML=html||'<div class="empty-state"><p>Aún no hay mensajes. ¡Escribe el primero!</p></div>';if(near||chatFirst){box.scrollTop=box.scrollHeight;chatFirst=false}}
 
 
 /* ===== MODERACIÓN IA CHAT + FOTOS ===== */
@@ -852,7 +858,7 @@ function openMsgMenu(id,e){
     html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:var(--text-main);font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="editMsg(\''+id+'\')">Editar</button>';
     html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:var(--danger);font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="delMsg(\''+id+'\');document.getElementById(\'msgMenu\').remove()">Eliminar</button>';
   } else {
-    html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:#f59e0b;font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="reportChatMsg(\''+id+'\',\''+(msgUid||'')+'\',\''+(msgText||'').replace(/'/g,'')+'\');let m=document.getElementById(\'msgMenu\');if(m)m.remove()">Reportar</button>';
+    html+='<button style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:#f59e0b;font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="reportChatMsg(\''+id+'\',\''+(msgUid||'')+'\',\''+(msgText||'').replace(/'/g,'')+'\');let m=document.getElementById(\'msgMenu\');if(m)m.remove()"><svg style="width:18px;height:18px;flex-shrink:0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg> Reportar</button>';
     if(typeof isAdmin==='function'&&isAdmin()){
       html+='<button style="display:block;width:100%;text-align:left;padding:12px 14px;background:none;border:none;color:var(--danger);font-weight:700;font-size:14px;cursor:pointer;border-radius:10px" onclick="delMsg(\''+id+'\');document.getElementById(\'msgMenu\').remove()">Eliminar (admin)</button>';
     }
