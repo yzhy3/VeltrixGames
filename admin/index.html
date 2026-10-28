@@ -92,7 +92,7 @@ function viewPanel(u){
     '<label>Enlace APK *</label><input id="f_apk" placeholder="https://...">'+
     '<label>Descripción</label><textarea id="f_desc"></textarea>'+
     '<label>Novedades</label><textarea id="f_log"></textarea>'+
-    '<label>Seguridad</label><input id="f_sec">'+
+    
     '<div class="g"><div><label>Tipo (MOD APK)</label><input id="f_badge"></div><div><label>Etiqueta (NUEVO)</label><input id="f_label"></div></div>'+
     '<label>Color etiqueta</label><input id="f_color" value="#EF4444">'+
     '<label>Media (un link por línea)</label><textarea id="f_media"></textarea>'+
@@ -421,7 +421,7 @@ function makeAdminFromUsers(uid){
 /* ===== GAMES ===== */
 function resetGame(){
   editId=null;var ft=$('ft');if(ft)ft.textContent='Nuevo juego';
-  ['f_title','f_dev','f_cat','f_img','f_apk','f_desc','f_log','f_sec','f_badge','f_label','f_media'].forEach(function(id){var el=$(id);if(el)el.value=''});
+  ['f_title','f_dev','f_cat','f_img','f_apk','f_desc','f_log','f_badge','f_label','f_media'].forEach(function(id){var el=$(id);if(el)el.value=''});
   if($('f_color'))$('f_color').value='#EF4444';if($('f_active'))$('f_active').checked=true;
 }
 
@@ -429,7 +429,7 @@ function saveGame(){
   var title=$('f_title').value.trim(),img=$('f_img').value.trim(),apk=$('f_apk').value.trim();
   if(!title||!img||!apk)return toast('Título, imagen y APK obligatorios',1);
   var media=($('f_media').value||'').split('\n').map(function(l){return l.trim()}).filter(Boolean).map(function(url){return{type:/youtu\.?be/.test(url)?'youtube':'image',url:url}});
-  var data={title:title,developer:$('f_dev').value.trim()||'Veltrix',category:$('f_cat').value.trim()||'Otros',img:img,apk_url:apk,desc_game:$('f_desc').value.trim(),changelog:$('f_log').value.trim(),security_info:$('f_sec').value.trim(),badge_text:$('f_badge').value.trim(),label_text:$('f_label').value.trim(),label_color:$('f_color').value.trim()||'#EF4444',media:media,is_active:$('f_active').checked};
+  var data={title:title,developer:$('f_dev').value.trim()||'Veltrix',category:$('f_cat').value.trim()||'Otros',img:img,apk_url:apk,desc_game:$('f_desc').value.trim(),changelog:$('f_log').value.trim(),badge_text:$('f_badge').value.trim(),label_text:$('f_label').value.trim(),label_color:$('f_color').value.trim()||'#EF4444',media:media,is_active:$('f_active').checked};
   var id=editId||db.collection('games').doc().id;
   var p=editId?Promise.resolve():db.collection('games').doc(id).set({createdAt:firebase.firestore.FieldValue.serverTimestamp()});
   p.then(function(){return db.collection('games').doc(id).set(data,{merge:true})}).then(function(){toast('Juego guardado');resetGame();loadList()}).catch(function(e){console.log(e);toast('Error al guardar',1)});
@@ -445,7 +445,7 @@ function loadList(){
 function editGame(id){
   var g=(window._l||[]).filter(function(x){return x.id===id})[0];if(!g)return;
   editId=id;$('ft').textContent='Editando: '+g.title;
-  $('f_title').value=g.title||'';$('f_dev').value=g.developer||'';$('f_cat').value=g.category||'';$('f_img').value=g.img||'';$('f_apk').value=g.apk_url||'';$('f_desc').value=g.desc_game||'';$('f_log').value=g.changelog||'';$('f_sec').value=g.security_info||'';$('f_badge').value=g.badge_text||'';$('f_label').value=g.label_text||'';$('f_color').value=g.label_color||'#EF4444';$('f_media').value=(g.media||[]).map(function(m){return m.url}).join('\n');$('f_active').checked=g.is_active!==false;window.scrollTo(0,0);
+  $('f_title').value=g.title||'';$('f_dev').value=g.developer||'';$('f_cat').value=g.category||'';$('f_img').value=g.img||'';$('f_apk').value=g.apk_url||'';$('f_desc').value=g.desc_game||'';$('f_log').value=g.changelog||'';$('f_badge').value=g.badge_text||'';$('f_label').value=g.label_text||'';$('f_color').value=g.label_color||'#EF4444';$('f_media').value=(g.media||[]).map(function(m){return m.url}).join('\n');$('f_active').checked=g.is_active!==false;window.scrollTo(0,0);
 }
 function toggleGame(id){var g=(window._l||[]).filter(function(x){return x.id===id})[0];if(!g)return;db.collection('games').doc(id).update({is_active:g.is_active===false}).then(loadList).catch(function(){toast('Error',1)})}
 function delGame(id){if(!confirm('¿Eliminar juego?'))return;db.collection('games').doc(id).delete().then(function(){toast('Eliminado');loadList()}).catch(function(){toast('Error',1)})}
